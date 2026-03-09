@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import {
   ChevronLeft, Sparkles, Camera, Truck, Package, Plus, Trash2,
-  Loader2, CheckCircle2, Edit3, Image
+  Loader2, CheckCircle2, Edit3, Image, Clock, Lock, Unlock, Calendar
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -325,6 +325,102 @@ function SmartKitCreator() {
   )
 }
 
+// ===== SLOTS MANAGER =====
+function SlotsManager() {
+  const { showToast } = useApp()
+  const today = new Date()
+  const dates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today); d.setDate(d.getDate() + i)
+    return d.toISOString().split('T')[0]
+  })
+  const [selectedDate, setSelectedDate] = useState(dates[0])
+  const [slots, setSlots] = useState([])
+  const [blockedHours, setBlockedHours] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const loadSlotData = async (date) => {
+    setLoading(true)
+    try {
+      const [slotData, blockedData] = await Promise.all([
+        api(`delivery/slots?date=${date}`),
+        api(`admin/blocked-slots?date=${date}`)
+      ])
+      if (!slotData.error) setSlots(slotData.slots || [])
+      if (!blockedData.error) setBlockedHours(blockedData.blocked_hours || [])
+    } catch (e) { showToast('Failed to load slots', 'error') }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { loadSlotData(selectedDate) }, [selectedDate])
+
+  const toggleBlock = async (hour, isCurrentlyBlocked) => {
+    const newBlocked = !isCurrentlyBlocked
+    const data = await api('admin/block-slot', { method: 'POST', body: { date: selectedDate, hour, blocked: newBlocked } })
+    if (!data.error) {
+      setBlockedHours(prev => newBlocked ? [...prev, hour] : prev.filter(h => h !== hour))
+      setSlots(prev => prev.map(s => s.hour === hour ? { ...s, available: !newBlocked && s.available_count > 0, admin_blocked: newBlocked } : s))
+      showToast(newBlocked ? `${hour}:00 slot blocked` : `${hour}:00 slot opened`, newBlocked ? 'error' : 'success')
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="border border-pink-100">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Calendar className="w-5 h-5 text-pink-500" />
+            <h3 className="font-bold text-sm text-gray-700">Manage Time Slots</h3>
+          </div>
+          <p className="text-xs text-gray-400 mb-3">Block a time slot so customers cannot book it. Useful when all decorators are busy or unavailable.</p>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {dates.map(d => {
+              const dt = new Date(d)
+              return (
+                <button key={d} onClick={() => setSelectedDate(d)}
+                  className={`shrink-0 w-16 py-2 rounded-xl text-center transition-all ${selectedDate === d ? 'gradient-pink text-white shadow-pink' : 'bg-gray-50 border border-gray-200'}`}>
+                  <p className="text-[10px] uppercase">{dt.toLocaleDateString('en', { weekday: 'short' })}</p>
+                  <p className="text-lg font-bold">{dt.getDate()}</p>
+                  <p className="text-[10px]">{dt.toLocaleDateString('en', { month: 'short' })}</p>
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-pink-400" /></div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {slots.map(s => {
+            const isBlocked = blockedHours.includes(s.hour)
+            return (
+              <button key={s.hour} onClick={() => toggleBlock(s.hour, isBlocked)}
+                className={`p-3 rounded-xl border-2 text-left transition-all ${isBlocked ? 'bg-red-50 border-red-300' : s.available_count === 0 ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200 hover:border-green-400'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className={`w-3.5 h-3.5 ${isBlocked ? 'text-red-500' : s.available_count === 0 ? 'text-orange-500' : 'text-green-600'}`} />
+                    <span className="text-xs font-bold text-gray-700">{s.hour}:00</span>
+                  </div>
+                  {isBlocked
+                    ? <Lock className="w-4 h-4 text-red-500" />
+                    : <Unlock className="w-4 h-4 text-green-500" />
+                  }
+                </div>
+                <p className="text-[10px] text-gray-500">{s.time_label}</p>
+                <p className={`text-[10px] font-semibold mt-0.5 ${isBlocked ? 'text-red-500' : s.available_count === 0 ? 'text-orange-500' : 'text-green-600'}`}>
+                  {isBlocked ? '🔒 Packed (by you)' : s.available_count === 0 ? '⚠️ Fully booked' : `✅ ${s.available_count} free`}
+                </p>
+                <p className="text-[9px] text-gray-400 mt-1">{isBlocked ? 'Tap to open' : 'Tap to block'}</p>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdminScreen() {
   const { navigate, items, setItems, deliveryPersons, setDeliveryPersons, adminTab: tab, setAdminTab: setTab, showToast } = useApp()
   const [newItem, setNewItem] = useState({ name: '', description: '', category: 'balloon_arch', price: '', stock_count: '', tags: '', color: '', material: '', size: '' })
@@ -422,16 +518,19 @@ export default function AdminScreen() {
       </div>
       <div className="px-4">
         <div className="flex gap-1 mb-4 overflow-x-auto">
-          {['smart', 'kits', 'items', 'delivery'].map(t => (
+          {['smart', 'kits', 'items', 'delivery', 'slots'].map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${tab === t ? 'gradient-pink text-white shadow-pink' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}>
-              {t === 'smart' ? 'AI Scanner' : t === 'kits' ? 'Kits' : t === 'items' ? 'Inventory' : 'Team'}
+              {t === 'smart' ? 'AI Scanner' : t === 'kits' ? 'Kits' : t === 'items' ? 'Inventory' : t === 'delivery' ? 'Team' : '🕐 Slots'}
             </button>
           ))}
         </div>
 
         {/* AI Smart Kit Creator */}
         {tab === 'smart' && <SmartKitCreator />}
+
+        {/* Slots Manager */}
+        {tab === 'slots' && <SlotsManager />}
 
         {tab === 'kits' && (
           <div className="space-y-3">

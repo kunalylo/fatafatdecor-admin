@@ -384,17 +384,39 @@ async function handleRoute(request, { params }) {
       return ok({ success: true, type: payment.type })
     }
 
+    // ====== ADMIN SLOT BLOCKING ======
+    if (path[0] === 'admin' && path[1] === 'block-slot' && method === 'POST') {
+      const { date, hour, blocked } = await request.json()
+      if (!date || hour === undefined) return err('date and hour required')
+      if (blocked) {
+        await db.collection('blocked_slots').updateOne({ date, hour }, { $set: { date, hour, blocked: true, updated_at: new Date() } }, { upsert: true })
+      } else {
+        await db.collection('blocked_slots').deleteOne({ date, hour })
+      }
+      return ok({ success: true, date, hour, blocked })
+    }
+    if (path[0] === 'admin' && path[1] === 'blocked-slots' && method === 'GET') {
+      const url = new URL(request.url)
+      const date = url.searchParams.get('date')
+      if (!date) return err('date required')
+      const blocked = await db.collection('blocked_slots').find({ date }).toArray()
+      return ok({ date, blocked_hours: blocked.map(b => b.hour) })
+    }
+
     // ====== DELIVERY SLOTS ======
     if (path[0] === 'delivery' && path[1] === 'slots' && method === 'GET') {
       const url = new URL(request.url)
       const date = url.searchParams.get('date')
       if (!date) return err('date required (YYYY-MM-DD)')
       const deliveryPersons = await db.collection('delivery_persons').find({ is_active: true }).toArray()
+      const blockedDocs = await db.collection('blocked_slots').find({ date }).toArray()
+      const blockedHours = blockedDocs.map(b => b.hour)
       const slots = []
       for (let hour = 9; hour <= 20; hour++) {
+        const isAdminBlocked = blockedHours.includes(hour)
         const bookedCount = deliveryPersons.filter(dp => (dp.schedule?.[date] || []).includes(hour)).length
         const available = deliveryPersons.length - bookedCount
-        slots.push({ hour, time_label: `${hour}:00 - ${hour + 1}:00`, available: available > 0, available_count: available })
+        slots.push({ hour, time_label: `${hour}:00 - ${hour + 1}:00`, available: !isAdminBlocked && available > 0, available_count: isAdminBlocked ? 0 : available, admin_blocked: isAdminBlocked })
       }
       return ok({ date, slots })
     }
