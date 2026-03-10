@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import {
-  ChevronLeft, Sparkles, Camera, Truck, Package, Plus, Trash2,
+  Sparkles, Camera, Truck, Package, Plus, Trash2,
   Loader2, CheckCircle2, Edit3, Image, Clock, Lock, Unlock, Calendar
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useApp } from '../context/AppContext'
-import { SCREENS, api } from '../lib/constants'
+import { api } from '../lib/constants'
 
 // ===== SMART KIT CREATOR - uses top-level state =====
 function SmartKitCreator() {
@@ -422,7 +422,7 @@ function SlotsManager() {
 }
 
 export default function AdminScreen() {
-  const { navigate, items, setItems, deliveryPersons, setDeliveryPersons, adminTab: tab, setAdminTab: setTab, showToast } = useApp()
+  const { items, setItems, deliveryPersons, setDeliveryPersons, adminTab: tab, showToast } = useApp()
   const [newItem, setNewItem] = useState({ name: '', description: '', category: 'balloon_arch', price: '', stock_count: '', tags: '', color: '', material: '', size: '' })
   const [newDp, setNewDp] = useState({ name: '', phone: '' })
   const [editingItem, setEditingItem] = useState(null)
@@ -511,20 +511,8 @@ export default function AdminScreen() {
   const categories = ['balloon_arch', 'balloon_wall', 'balloons', 'neon_signs', 'backdrop', 'props', 'lights', 'table_decor', 'banners', 'flowers', 'drapes', 'general']
 
   return (
-    <div className="slide-up pb-24 bg-white min-h-screen">
-      <div className="flex items-center gap-3 p-4">
-        <button onClick={() => navigate(SCREENS.HOME)} className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100"><ChevronLeft className="w-5 h-5 text-gray-600" /></button>
-        <h1 className="font-bold text-lg text-gray-800">Admin Panel</h1>
-      </div>
-      <div className="px-4">
-        <div className="flex gap-1 mb-4 overflow-x-auto">
-          {['smart', 'kits', 'items', 'delivery', 'slots'].map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${tab === t ? 'gradient-pink text-white shadow-pink' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}>
-              {t === 'smart' ? 'AI Scanner' : t === 'kits' ? 'Kits' : t === 'items' ? 'Inventory' : t === 'delivery' ? 'Team' : '🕐 Slots'}
-            </button>
-          ))}
-        </div>
+    <div className="p-6 space-y-4">
+      <div className="px-0">
 
         {/* AI Smart Kit Creator */}
         {tab === 'smart' && <SmartKitCreator />}

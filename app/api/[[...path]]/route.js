@@ -349,13 +349,21 @@ async function handleRoute(request, { params }) {
     if (path[0] === 'orders' && !path[1] && method === 'GET') {
       const url = new URL(request.url)
       const user_id = url.searchParams.get('user_id')
-      if (!user_id) return err('user_id required')
-      const orders = await db.collection('orders').find({ user_id }).sort({ created_at: -1 }).toArray()
+      // Admin: fetch ALL orders; Customer: fetch by user_id
+      const query = user_id ? { user_id } : {}
+      const orders = await db.collection('orders').find(query).sort({ created_at: -1 }).toArray()
       return ok(orders.map(({ _id, ...o }) => o))
     }
     if (path[0] === 'orders' && path[1] && method === 'GET') {
       const order = await db.collection('orders').findOne({ id: path[1] })
       if (!order) return err('Order not found', 404)
+      const { _id, ...clean } = order; return ok(clean)
+    }
+    // Admin: update order status
+    if (path[0] === 'orders' && path[1] && method === 'PUT') {
+      const updates = await request.json()
+      await db.collection('orders').updateOne({ id: path[1] }, { $set: { ...updates, updated_at: new Date() } })
+      const order = await db.collection('orders').findOne({ id: path[1] })
       const { _id, ...clean } = order; return ok(clean)
     }
 
