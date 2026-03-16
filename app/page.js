@@ -8,9 +8,10 @@ import AdminOrders from './screens/AdminOrders'
 import AdminDashboard from './screens/AdminDashboard'
 import AdminSubAdmins from './screens/AdminSubAdmins'
 import AdminUsers from './screens/AdminUsers'
+import AdminCities from './screens/AdminCities'
 import {
   LayoutDashboard, Sparkles, Package, Box, Users, Clock,
-  ShoppingBag, LogOut, Menu, X, ChevronRight, UserCog, UserCheck, Shield
+  ShoppingBag, LogOut, Menu, X, ChevronRight, UserCog, UserCheck, Shield, MapPin
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ const ALL_NAV_ITEMS = [
   { id: 'delivery',    label: 'Team',         icon: Users,          adminOnly: false },
   { id: 'slots',       label: 'Slots',        icon: Clock,          adminOnly: false },
   { id: 'users',       label: 'Customers',    icon: UserCheck,      adminOnly: false },
+  { id: 'cities',      label: 'Cities',       icon: MapPin,         adminOnly: false },
   { id: 'sub-admins',  label: 'Sub-Admins',   icon: UserCog,        adminOnly: true  },
 ]
 
@@ -211,7 +213,8 @@ function AdminPanel() {
           {adminTab === 'orders'     && <AdminOrders />}
           {adminTab === 'sub-admins' && <AdminSubAdmins />}
           {adminTab === 'users'      && <AdminUsers />}
-          {!['dashboard', 'orders', 'sub-admins', 'users'].includes(adminTab) && <AdminScreen />}
+          {adminTab === 'cities'     && <AdminCities />}
+          {!['dashboard', 'orders', 'sub-admins', 'users', 'cities'].includes(adminTab) && <AdminScreen />}
         </main>
       </div>
     </div>

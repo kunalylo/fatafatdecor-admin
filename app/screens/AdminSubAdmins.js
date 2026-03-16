@@ -19,6 +19,7 @@ const PERMISSION_OPTIONS = [
   { id: 'delivery', label: 'Team',        desc: 'Manage decorator team' },
   { id: 'slots',    label: 'Slots',       desc: 'Manage delivery slots' },
   { id: 'users',    label: 'Customers',   desc: 'View and edit customers' },
+  { id: 'cities',   label: 'Cities',      desc: 'Add/remove allowed cities' },
 ]
 
 const EMPTY_FORM = { name: '', email: '', password: '', permissions: [] }
