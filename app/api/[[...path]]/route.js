@@ -732,6 +732,94 @@ async function handleRoute(request, { params }) {
       return ok({ success: true, items_count: items.length, rent_items_count: rentItems.length, kits_count: kitsToInsert.length, delivery_persons_count: deliveryPersons.length, message: 'Database seeded!' })
     }
 
+    // ====== SUB-ADMINS CRUD ======
+    if (path[0] === 'admin' && path[1] === 'sub-admins' && !path[2] && method === 'GET') {
+      const subs = await db.collection('users').find({ role: 'sub_admin' }).sort({ created_at: -1 }).toArray()
+      return ok(subs.map(({ _id, password, ...u }) => u))
+    }
+    if (path[0] === 'admin' && path[1] === 'sub-admins' && !path[2] && method === 'POST') {
+      const { name, email, password, permissions } = await request.json()
+      if (!name || !email || !password) return err('Name, email, password required')
+      const existing = await db.collection('users').findOne({ email })
+      if (existing) return err('Email already registered')
+      const sub = {
+        id: uuidv4(), name, email, phone: '',
+        password: hashPwd(password),
+        role: 'sub_admin',
+        permissions: permissions || [],
+        credits: 0, has_purchased_credits: false,
+        location: null, auth_provider: 'email', created_at: new Date()
+      }
+      await db.collection('users').insertOne(sub)
+      const { _id, password: _, ...safe } = sub
+      return ok(safe)
+    }
+    if (path[0] === 'admin' && path[1] === 'sub-admins' && path[2] && method === 'PUT') {
+      const body = await request.json(); delete body._id; delete body.password
+      body.updated_at = new Date()
+      await db.collection('users').updateOne({ id: path[2], role: 'sub_admin' }, { $set: body })
+      const sub = await db.collection('users').findOne({ id: path[2] })
+      if (!sub) return err('Sub-admin not found', 404)
+      const { _id, password, ...safe } = sub; return ok(safe)
+    }
+    if (path[0] === 'admin' && path[1] === 'sub-admins' && path[2] && method === 'DELETE') {
+      await db.collection('users').deleteOne({ id: path[2], role: 'sub_admin' })
+      return ok({ success: true })
+    }
+
+    // ====== ADMIN USERS (customers) ======
+    if (path[0] === 'admin' && path[1] === 'users' && !path[2] && method === 'GET') {
+      const url = new URL(request.url)
+      const search = url.searchParams.get('search') || ''
+      const query = { role: { $in: ['user', 'admin'] } }
+      if (search) query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
+      ]
+      const users = await db.collection('users').find(query).sort({ created_at: -1 }).limit(100).toArray()
+      return ok(users.map(({ _id, password, ...u }) => u))
+    }
+    if (path[0] === 'admin' && path[1] === 'users' && path[2] && method === 'PUT') {
+      const body = await request.json(); delete body._id; delete body.password
+      if (body.new_password) { body.password = hashPwd(body.new_password); delete body.new_password }
+      await db.collection('users').updateOne({ id: path[2] }, { $set: body })
+      const u = await db.collection('users').findOne({ id: path[2] })
+      if (!u) return err('User not found', 404)
+      const { _id, password, ...safe } = u; return ok(safe)
+    }
+    if (path[0] === 'admin' && path[1] === 'users' && path[2] && method === 'DELETE') {
+      await db.collection('users').deleteOne({ id: path[2] })
+      await db.collection('orders').deleteMany({ user_id: path[2] })
+      await db.collection('designs').deleteMany({ user_id: path[2] })
+      return ok({ success: true })
+    }
+
+    // ====== ADMIN DELIVERY PERSONS (toggle active, edit) ======
+    if (path[0] === 'admin' && path[1] === 'delivery-persons' && path[2] === 'toggle' && method === 'POST') {
+      const dp = await db.collection('delivery_persons').findOne({ id: path[2] })
+      if (!dp) return err('Decorator not found', 404)
+      await db.collection('delivery_persons').updateOne({ id: path[2] }, { $set: { is_active: !dp.is_active } })
+      return ok({ success: true, is_active: !dp.is_active })
+    }
+    if (path[0] === 'admin' && path[1] === 'dp-toggle' && method === 'POST') {
+      const { dp_id } = await request.json()
+      const dp = await db.collection('delivery_persons').findOne({ id: dp_id })
+      if (!dp) return err('Decorator not found', 404)
+      const newStatus = !dp.is_active
+      await db.collection('delivery_persons').updateOne({ id: dp_id }, { $set: { is_active: newStatus } })
+      return ok({ success: true, is_active: newStatus })
+    }
+
+    // ====== ADMIN ORDERS — update full ======
+    if (path[0] === 'orders' && path[1] && method === 'PUT') {
+      const body = await request.json(); delete body._id
+      await db.collection('orders').updateOne({ id: path[1] }, { $set: body })
+      const o = await db.collection('orders').findOne({ id: path[1] })
+      if (!o) return err('Order not found', 404)
+      const { _id, ...clean } = o; return ok(clean)
+    }
+
     return err(`Route /${path.join('/')} not found`, 404)
   } catch (error) {
     console.error('API Error:', error)

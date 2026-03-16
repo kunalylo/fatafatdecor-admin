@@ -32,10 +32,12 @@ export function AppProvider({ children }) {
 
   // Load admin data after login
   useEffect(() => {
-    if (user?.role === 'admin') {
-      api('items').then(d => !d.error && setItems(d))
-      api('delivery-persons').then(d => !d.error && setDeliveryPersons(d))
-      api('orders').then(d => !d.error && setOrders(d))
+    if (user?.role === 'admin' || user?.role === 'sub_admin') {
+      const perms = user?.permissions || []
+      const hasAll = user?.role === 'admin'
+      if (hasAll || perms.includes('items'))    api('items').then(d => !d.error && setItems(d))
+      if (hasAll || perms.includes('delivery')) api('delivery-persons').then(d => !d.error && setDeliveryPersons(d))
+      if (hasAll || perms.includes('orders'))   api('orders').then(d => !d.error && setOrders(d))
     }
   }, [user])
 
@@ -47,7 +49,9 @@ export function AppProvider({ children }) {
         body: { email: authForm.email, password: authForm.password }
       })
       if (data.error) { showToast(data.error, 'error'); return }
-      if (data.role !== 'admin') { showToast('Admin access required', 'error'); return }
+      if (data.role !== 'admin' && data.role !== 'sub_admin') {
+        showToast('Admin access required', 'error'); return
+      }
       setUser(data)
       showToast(`Welcome back, ${data.name}!`, 'success')
     } catch (e) { showToast('Login failed', 'error') }

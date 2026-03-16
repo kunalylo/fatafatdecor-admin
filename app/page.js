@@ -6,22 +6,27 @@ import Toast from './components/Toast'
 import AdminScreen from './screens/AdminScreen'
 import AdminOrders from './screens/AdminOrders'
 import AdminDashboard from './screens/AdminDashboard'
+import AdminSubAdmins from './screens/AdminSubAdmins'
+import AdminUsers from './screens/AdminUsers'
 import {
   LayoutDashboard, Sparkles, Package, Box, Users, Clock,
-  ShoppingBag, LogOut, Menu, X, ChevronRight
+  ShoppingBag, LogOut, Menu, X, ChevronRight, UserCog, UserCheck, Shield
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard',  icon: LayoutDashboard },
-  { id: 'orders',    label: 'Orders',     icon: ShoppingBag },
-  { id: 'smart',     label: 'AI Scanner', icon: Sparkles },
-  { id: 'kits',      label: 'Kits',       icon: Package },
-  { id: 'items',     label: 'Inventory',  icon: Box },
-  { id: 'delivery',  label: 'Team',       icon: Users },
-  { id: 'slots',     label: 'Slots',      icon: Clock },
+// All nav items — sub-admins tab is admin-only
+const ALL_NAV_ITEMS = [
+  { id: 'dashboard',   label: 'Dashboard',   icon: LayoutDashboard, adminOnly: false },
+  { id: 'orders',      label: 'Orders',       icon: ShoppingBag,    adminOnly: false },
+  { id: 'smart',       label: 'AI Scanner',   icon: Sparkles,       adminOnly: false },
+  { id: 'kits',        label: 'Kits',         icon: Package,        adminOnly: false },
+  { id: 'items',       label: 'Inventory',    icon: Box,            adminOnly: false },
+  { id: 'delivery',    label: 'Team',         icon: Users,          adminOnly: false },
+  { id: 'slots',       label: 'Slots',        icon: Clock,          adminOnly: false },
+  { id: 'users',       label: 'Customers',    icon: UserCheck,      adminOnly: false },
+  { id: 'sub-admins',  label: 'Sub-Admins',   icon: UserCog,        adminOnly: true  },
 ]
 
 function AdminLogin() {
@@ -73,7 +78,18 @@ function AdminLogin() {
 function AdminPanel() {
   const { user, setUser, adminTab, setAdminTab, showToast } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const activeNav = NAV_ITEMS.find(n => n.id === adminTab) || NAV_ITEMS[0]
+
+  const isFullAdmin = user?.role === 'admin'
+  const userPerms   = user?.permissions || []
+
+  // Filter nav: full admin sees all; sub-admin sees only permitted + dashboard
+  const visibleNav = ALL_NAV_ITEMS.filter(item => {
+    if (item.adminOnly) return isFullAdmin
+    if (isFullAdmin)    return true
+    return item.id === 'dashboard' || userPerms.includes(item.id)
+  })
+
+  const activeNav = visibleNav.find(n => n.id === adminTab) || visibleNav[0]
 
   const handleLogout = () => {
     setUser(null)
@@ -97,7 +113,7 @@ function AdminPanel() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-white font-bold text-sm truncate">FatafatDecor</h1>
-            <p className="text-slate-400 text-xs">Admin Panel</p>
+            <p className="text-slate-400 text-xs">{isFullAdmin ? 'Admin Panel' : 'Sub-Admin Panel'}</p>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="text-slate-400 hover:text-white lg:hidden">
             <X className="w-5 h-5" />
@@ -106,7 +122,7 @@ function AdminPanel() {
 
         {/* Nav */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map(item => {
+          {visibleNav.map(item => {
             const Icon = item.icon
             const isActive = adminTab === item.id
             return (
@@ -138,6 +154,12 @@ function AdminPanel() {
               <p className="text-white text-xs font-semibold truncate">{user?.name || 'Admin'}</p>
               <p className="text-slate-500 text-[10px] truncate">{user?.email}</p>
             </div>
+            {!isFullAdmin && (
+              <div className="shrink-0 flex items-center gap-1 bg-orange-500/20 px-2 py-0.5 rounded-full">
+                <Shield className="w-3 h-3 text-orange-400" />
+                <span className="text-orange-400 text-[9px] font-bold">SUB</span>
+              </div>
+            )}
           </div>
           <button
             onClick={handleLogout}
@@ -169,10 +191,10 @@ function AdminPanel() {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-3">
-            {(() => { const Icon = activeNav.icon; return <Icon className="w-5 h-5 text-pink-500" /> })()}
+            {activeNav && (() => { const Icon = activeNav.icon; return <Icon className="w-5 h-5 text-pink-500" /> })()}
             <div>
-              <h2 className="text-gray-800 font-bold text-lg leading-tight">{activeNav.label}</h2>
-              <p className="text-gray-400 text-xs">FatafatDecor Admin</p>
+              <h2 className="text-gray-800 font-bold text-lg leading-tight">{activeNav?.label}</h2>
+              <p className="text-gray-400 text-xs">FatafatDecor {isFullAdmin ? 'Admin' : 'Sub-Admin'}</p>
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -185,9 +207,11 @@ function AdminPanel() {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          {adminTab === 'dashboard' && <AdminDashboard />}
-          {adminTab === 'orders'    && <AdminOrders />}
-          {!['dashboard', 'orders'].includes(adminTab) && <AdminScreen />}
+          {adminTab === 'dashboard'  && <AdminDashboard />}
+          {adminTab === 'orders'     && <AdminOrders />}
+          {adminTab === 'sub-admins' && <AdminSubAdmins />}
+          {adminTab === 'users'      && <AdminUsers />}
+          {!['dashboard', 'orders', 'sub-admins', 'users'].includes(adminTab) && <AdminScreen />}
         </main>
       </div>
     </div>
