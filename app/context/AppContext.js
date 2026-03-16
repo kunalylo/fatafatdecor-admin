@@ -30,6 +30,25 @@ export function AppProvider({ children }) {
     setTimeout(() => setToast(null), 3500)
   }, [])
 
+  // ── Persist admin session to localStorage ──
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('fd_admin_user')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setUser(parsed)
+      }
+    } catch (e) { localStorage.removeItem('fd_admin_user') }
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      try { localStorage.setItem('fd_admin_user', JSON.stringify(user)) } catch (e) {}
+    } else {
+      localStorage.removeItem('fd_admin_user')
+    }
+  }, [user])
+
   // Load admin data after login
   useEffect(() => {
     if (user?.role === 'admin' || user?.role === 'sub_admin') {
