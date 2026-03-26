@@ -68,9 +68,6 @@ function AdminLogin() {
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
           </Button>
-          <p className="text-slate-500 text-xs text-center pt-1">
-            admin@fatafatdecor.com / admin123
-          </p>
         </div>
       </div>
     </div>
