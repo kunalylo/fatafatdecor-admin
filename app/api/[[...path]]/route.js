@@ -480,10 +480,15 @@ async function handleRoute(request, { params }) {
     }
     if (path[0] === 'delivery-persons' && path[1] && method === 'PUT') {
       const body = await request.json(); delete body._id
+      if (body.password) body.password = hashPwd(body.password)
       await db.collection('delivery_persons').updateOne({ id: path[1] }, { $set: body })
       const dp = await db.collection('delivery_persons').findOne({ id: path[1] })
       if (!dp) return err('Delivery person not found', 404)
-      const { _id, ...clean } = dp; return ok(clean)
+      const { _id, password: _, ...clean } = dp; return ok(clean)
+    }
+    if (path[0] === 'delivery-persons' && path[1] && method === 'DELETE') {
+      await db.collection('delivery_persons').deleteOne({ id: path[1] })
+      return ok({ success: true })
     }
 
     // ====== USER LOCATION ======

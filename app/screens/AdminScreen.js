@@ -424,7 +424,9 @@ function SlotsManager() {
 export default function AdminScreen() {
   const { items, setItems, deliveryPersons, setDeliveryPersons, adminTab: tab, showToast } = useApp()
   const [newItem, setNewItem] = useState({ name: '', description: '', category: 'balloon_arch', price: '', stock_count: '', tags: '', color: '', material: '', size: '' })
-  const [newDp, setNewDp] = useState({ name: '', phone: '' })
+  const [newDp, setNewDp] = useState({ name: '', phone: '', password: '' })
+  const [editingDp, setEditingDp] = useState(null)
+  const [deletingDp, setDeletingDp] = useState(null)
   const [editingItem, setEditingItem] = useState(null)
   const [kits, setKits] = useState([])
   const [newKit, setNewKit] = useState({
@@ -505,7 +507,27 @@ export default function AdminScreen() {
   const addDeliveryPerson = async () => {
     if (!newDp.name) { showToast('Name required', 'error'); return }
     const data = await api('delivery-persons', { method: 'POST', body: newDp })
-    if (!data.error) { setDeliveryPersons(prev => [...prev, data]); setNewDp({ name: '', phone: '' }); showToast('Added!', 'success') }
+    if (!data.error) { setDeliveryPersons(prev => [...prev, data]); setNewDp({ name: '', phone: '', password: '' }); showToast('Added!', 'success') }
+  }
+
+  const updateDeliveryPerson = async () => {
+    if (!editingDp?.name) { showToast('Name required', 'error'); return }
+    const { id, ...updates } = editingDp
+    if (!updates.password) delete updates.password
+    const data = await api(`delivery-persons/${id}`, { method: 'PUT', body: updates })
+    if (!data.error) { setDeliveryPersons(prev => prev.map(d => d.id === id ? data : d)); setEditingDp(null); showToast('Updated!', 'success') }
+  }
+
+  const deleteDeliveryPerson = async (id) => {
+    await api(`delivery-persons/${id}`, { method: 'DELETE' })
+    setDeliveryPersons(prev => prev.filter(d => d.id !== id))
+    setDeletingDp(null)
+    showToast('Removed', 'success')
+  }
+
+  const toggleDeliveryPerson = async (dp) => {
+    const data = await api(`delivery-persons/${dp.id}`, { method: 'PUT', body: { is_active: !dp.is_active } })
+    if (!data.error) setDeliveryPersons(prev => prev.map(d => d.id === dp.id ? data : d))
   }
 
   const categories = ['balloon_arch', 'balloon_wall', 'balloons', 'neon_signs', 'backdrop', 'props', 'lights', 'table_decor', 'banners', 'flowers', 'drapes', 'general']
@@ -703,23 +725,97 @@ export default function AdminScreen() {
         )}
         {tab === 'delivery' && (
           <div className="space-y-3">
+            {/* Add Form */}
             <Card className="border border-pink-100">
               <CardContent className="p-4 space-y-2">
-                <h3 className="font-bold text-sm text-gray-700 mb-2">Add Delivery Person</h3>
-                <Input placeholder="Name" value={newDp.name} onChange={e => setNewDp(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <h3 className="font-bold text-sm text-gray-700 mb-2">Add Team Member</h3>
+                <Input placeholder="Name *" value={newDp.name} onChange={e => setNewDp(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
                 <Input placeholder="Phone" value={newDp.phone} onChange={e => setNewDp(p => ({ ...p, phone: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <Button onClick={addDeliveryPerson} className="w-full gradient-pink border-0 text-white shadow-pink"><Plus className="w-4 h-4 mr-1" /> Add</Button>
+                <Input placeholder="Password (default: 1234)" value={newDp.password} onChange={e => setNewDp(p => ({ ...p, password: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <Button onClick={addDeliveryPerson} className="w-full gradient-pink border-0 text-white shadow-pink"><Plus className="w-4 h-4 mr-1" /> Add Member</Button>
               </CardContent>
             </Card>
+
+            {/* Team list */}
+            <p className="text-xs text-gray-400 px-1">{deliveryPersons.length} member{deliveryPersons.length !== 1 ? 's' : ''}</p>
             {deliveryPersons.map(dp => (
               <Card key={dp.id} className="border border-gray-100">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full gradient-pink flex items-center justify-center"><Truck className="w-5 h-5 text-white" /></div>
-                  <div><p className="text-sm font-semibold text-gray-700">{dp.name}</p><p className="text-xs text-gray-400">{dp.phone}</p></div>
-                  <Badge className={`ml-auto ${dp.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>{dp.is_active ? 'Active' : 'Inactive'}</Badge>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full gradient-pink flex items-center justify-center flex-shrink-0">
+                      <Truck className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-700">{dp.name}</p>
+                      <p className="text-xs text-gray-400">{dp.phone || 'No phone'}</p>
+                      <div className="flex gap-2 mt-1 flex-wrap">
+                        <span className="text-xs text-gray-400">⭐ {dp.rating?.toFixed(1) || '5.0'}</span>
+                        <span className="text-xs text-gray-400">· {dp.total_deliveries || 0} jobs</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge
+                        onClick={() => toggleDeliveryPerson(dp)}
+                        className={`cursor-pointer text-xs ${dp.is_active ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                      >
+                        {dp.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <div className="flex gap-1">
+                        <button onClick={() => setEditingDp({ ...dp, password: '' })} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-500 transition-colors">
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setDeletingDp(dp)} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-500 transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
+
+            {/* Edit Modal */}
+            {editingDp && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setEditingDp(null)}>
+                <Card className="w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
+                  <CardContent className="p-4 space-y-3">
+                    <h3 className="font-bold text-sm text-gray-700">Edit Team Member</h3>
+                    <Input placeholder="Name *" value={editingDp.name} onChange={e => setEditingDp(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                    <Input placeholder="Phone" value={editingDp.phone || ''} onChange={e => setEditingDp(p => ({ ...p, phone: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                    <Input placeholder="New Password (leave blank to keep)" value={editingDp.password || ''} onChange={e => setEditingDp(p => ({ ...p, password: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">Active</span>
+                      <button
+                        onClick={() => setEditingDp(p => ({ ...p, is_active: !p.is_active }))}
+                        className={`w-10 h-5 rounded-full transition-colors ${editingDp.is_active ? 'bg-green-400' : 'bg-gray-300'} relative`}
+                      >
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${editingDp.is_active ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={() => setEditingDp(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>
+                      <Button onClick={updateDeliveryPerson} className="flex-1 gradient-pink border-0 text-white shadow-pink h-10 rounded-lg">Save</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Delete Confirm Modal */}
+            {deletingDp && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setDeletingDp(null)}>
+                <Card className="w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
+                  <CardContent className="p-4 space-y-3">
+                    <h3 className="font-bold text-sm text-gray-700">Remove Team Member?</h3>
+                    <p className="text-sm text-gray-500">Remove <span className="font-semibold text-gray-700">{deletingDp.name}</span> from the team? This cannot be undone.</p>
+                    <div className="flex gap-2">
+                      <Button onClick={() => setDeletingDp(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>
+                      <Button onClick={() => deleteDeliveryPerson(deletingDp.id)} className="flex-1 bg-red-500 hover:bg-red-600 text-white border-0 h-10 rounded-lg">Remove</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         )}
       </div>
