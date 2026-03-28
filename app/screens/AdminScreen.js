@@ -428,6 +428,7 @@ export default function AdminScreen() {
   const [editingDp, setEditingDp] = useState(null)
   const [deletingDp, setDeletingDp] = useState(null)
   const [editingItem, setEditingItem] = useState(null)
+  const [editingKit, setEditingKit] = useState(null)
   const [kits, setKits] = useState([])
   const [newKit, setNewKit] = useState({
     name: '', description: '', occasion_tags: '', room_types: '',
@@ -482,6 +483,27 @@ export default function AdminScreen() {
     await api(`kits/${id}`, { method: 'DELETE' })
     setKits(prev => prev.filter(k => k.id !== id))
     showToast('Kit deleted', 'success')
+  }
+
+  const updateKit = async () => {
+    if (!editingKit?.name) { showToast('Kit name required', 'error'); return }
+    const { id, ...updates } = editingKit
+    const data = await api(`kits/${id}`, {
+      method: 'PUT',
+      body: {
+        ...updates,
+        occasion_tags: typeof updates.occasion_tags === 'string' ? updates.occasion_tags.split(',').map(t => t.trim()).filter(Boolean) : updates.occasion_tags,
+        room_types: typeof updates.room_types === 'string' ? updates.room_types.split(',').map(t => t.trim()).filter(Boolean) : updates.room_types,
+        labor_cost: Number(updates.labor_cost) || 0,
+        final_price: Number(updates.final_price) || 0,
+        setup_time_minutes: Number(updates.setup_time_minutes) || 60,
+      }
+    })
+    if (!data.error) {
+      setKits(prev => prev.map(k => k.id === id ? data : k))
+      setEditingKit(null)
+      showToast('Kit updated!', 'success')
+    } else { showToast(data.error, 'error') }
   }
 
   const addItem = async () => {
@@ -650,7 +672,10 @@ export default function AdminScreen() {
                         <Badge className={kit.is_active ? 'bg-green-100 text-green-600 text-[9px]' : 'bg-gray-100 text-gray-500 text-[9px]'}>{kit.is_active ? 'Active' : 'Inactive'}</Badge>
                       </div>
                     </div>
-                    <button onClick={() => deleteKit(kit.id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0"><Trash2 className="w-3 h-3 text-red-400" /></button>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => setEditingKit({ ...kit, occasion_tags: (kit.occasion_tags || []).join(', '), room_types: (kit.room_types || []).join(', ') })} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center"><Edit3 className="w-3 h-3 text-blue-500" /></button>
+                      <button onClick={() => deleteKit(kit.id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><Trash2 className="w-3 h-3 text-red-400" /></button>
+                    </div>
                   </div>
                   {(kit.kit_items || []).length > 0 && (
                     <div className="mt-2 pt-2 border-t border-gray-50">
@@ -666,6 +691,40 @@ export default function AdminScreen() {
             ))}
           </div>
         )}
+        {/* Kit Edit Modal */}
+        {editingKit && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setEditingKit(null)}>
+            <Card className="w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <CardContent className="p-4 space-y-2">
+                <h3 className="font-bold text-sm text-gray-700">Edit Kit</h3>
+                <Input placeholder="Kit Name *" value={editingKit.name} onChange={e => setEditingKit(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <textarea placeholder="Description" value={editingKit.description || ''} onChange={e => setEditingKit(p => ({ ...p, description: e.target.value }))} className="w-full h-16 bg-gray-50 rounded-lg p-3 text-sm border border-gray-200 outline-none resize-none" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="Occasions (birthday,wedding)" value={editingKit.occasion_tags} onChange={e => setEditingKit(p => ({ ...p, occasion_tags: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Rooms (Living Room,Hall)" value={editingKit.room_types} onChange={e => setEditingKit(p => ({ ...p, room_types: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input placeholder="Labor Rs" type="number" value={editingKit.labor_cost || ''} onChange={e => setEditingKit(p => ({ ...p, labor_cost: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Travel Rs" type="number" value={editingKit.travel_cost || ''} onChange={e => setEditingKit(p => ({ ...p, travel_cost: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Final Price" type="number" value={editingKit.final_price || ''} onChange={e => setEditingKit(p => ({ ...p, final_price: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="Setup (min)" type="number" value={editingKit.setup_time_minutes || ''} onChange={e => setEditingKit(p => ({ ...p, setup_time_minutes: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Color Theme" value={editingKit.color_theme || ''} onChange={e => setEditingKit(p => ({ ...p, color_theme: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                </div>
+                <select value={editingKit.difficulty || 'medium'} onChange={e => setEditingKit(p => ({ ...p, difficulty: e.target.value }))} className="w-full h-10 bg-gray-50 rounded-lg px-3 text-xs border border-gray-200">
+                  <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
+                </select>
+                <Input placeholder="Admin Notes" value={editingKit.notes || ''} onChange={e => setEditingKit(p => ({ ...p, notes: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                <div className="flex gap-2 pt-1">
+                  <Button onClick={() => setEditingKit(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>
+                  <Button onClick={updateKit} className="flex-1 gradient-pink border-0 text-white shadow-pink h-10 rounded-lg">Save</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {tab === 'items' && (
           <div className="space-y-3">
             <Card className="border border-pink-100">
@@ -711,10 +770,7 @@ export default function AdminScreen() {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <button onClick={() => {
-                        const newStock = prompt('Update stock count:', item.stock_count)
-                        if (newStock !== null) updateItem(item.id, { stock_count: Number(newStock) })
-                      }} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center"><Edit3 className="w-3 h-3 text-blue-500" /></button>
+                      <button onClick={() => setEditingItem({ ...item, tags: (item.tags || []).join(', ') })} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center"><Edit3 className="w-3 h-3 text-blue-500" /></button>
                       <button onClick={() => deleteItem(item.id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><Trash2 className="w-3 h-3 text-red-400" /></button>
                     </div>
                   </div>
@@ -723,6 +779,38 @@ export default function AdminScreen() {
             ))}
           </div>
         )}
+        {/* Item Edit Modal */}
+        {editingItem && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setEditingItem(null)}>
+            <Card className="w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <CardContent className="p-4 space-y-2">
+                <h3 className="font-bold text-sm text-gray-700">Edit Item</h3>
+                <Input placeholder="Item Name *" value={editingItem.name} onChange={e => setEditingItem(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <Input placeholder="Description" value={editingItem.description || ''} onChange={e => setEditingItem(p => ({ ...p, description: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <div className="grid grid-cols-2 gap-2">
+                  <select value={editingItem.category} onChange={e => setEditingItem(p => ({ ...p, category: e.target.value }))} className="h-10 bg-gray-50 rounded-lg px-3 text-sm border border-gray-200">
+                    {categories.map(c => <option key={c} value={c}>{c.replace('_', ' ')}</option>)}
+                  </select>
+                  <Input placeholder="Color" value={editingItem.color || ''} onChange={e => setEditingItem(p => ({ ...p, color: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="Material" value={editingItem.material || ''} onChange={e => setEditingItem(p => ({ ...p, material: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Size" value={editingItem.size || ''} onChange={e => setEditingItem(p => ({ ...p, size: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="Price (Rs) *" type="number" value={editingItem.price} onChange={e => setEditingItem(p => ({ ...p, price: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Stock Count" type="number" value={editingItem.stock_count} onChange={e => setEditingItem(p => ({ ...p, stock_count: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                </div>
+                <Input placeholder="Tags (comma-separated)" value={editingItem.tags || ''} onChange={e => setEditingItem(p => ({ ...p, tags: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <div className="flex gap-2 pt-1">
+                  <Button onClick={() => setEditingItem(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>
+                  <Button onClick={() => updateItem(editingItem.id, { ...editingItem, price: Number(editingItem.price), stock_count: Number(editingItem.stock_count), tags: typeof editingItem.tags === 'string' ? editingItem.tags.split(',').map(t => t.trim()).filter(Boolean) : editingItem.tags })} className="flex-1 gradient-pink border-0 text-white shadow-pink h-10 rounded-lg">Save</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {tab === 'delivery' && (
           <div className="space-y-3">
             {/* Add Form */}
