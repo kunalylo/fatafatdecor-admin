@@ -9,12 +9,15 @@ import { Badge } from '@/components/ui/badge'
 const STATUS_STYLES = {
   pending:    'bg-yellow-100 text-yellow-700 border-yellow-200',
   assigned:   'bg-blue-100 text-blue-700 border-blue-200',
+  en_route:   'bg-indigo-100 text-indigo-700 border-indigo-200',
+  arrived:    'bg-cyan-100 text-cyan-700 border-cyan-200',
   decorating: 'bg-purple-100 text-purple-700 border-purple-200',
+  delivered:  'bg-green-100 text-green-700 border-green-200',
   completed:  'bg-green-100 text-green-700 border-green-200',
   cancelled:  'bg-red-100 text-red-700 border-red-200',
 }
 
-const STATUSES = ['pending', 'assigned', 'decorating', 'completed', 'cancelled']
+const STATUSES = ['pending', 'assigned', 'en_route', 'arrived', 'decorating', 'delivered', 'completed', 'cancelled']
 
 export default function AdminOrders() {
   const { orders, setOrders, showToast } = useApp()
