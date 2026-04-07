@@ -27,11 +27,22 @@ export const CREDIT_PACKAGES = [
   { credits: 10, price: 950, label: '10 Credits' }
 ]
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
+
 export const api = async (path, opts = {}) => {
-  const res = await fetch(`/api/${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opts,
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  })
-  return res.json()
+  try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null
+    const headers = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const url = API_BASE ? `${API_BASE}/api/${path}` : `/api/${path}`
+    const res = await fetch(url, {
+      headers,
+      ...opts,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    })
+    return res.json()
+  } catch (e) {
+    console.error(`API error [${path}]:`, e.message)
+    return { error: 'Network error. Please check your connection.' }
+  }
 }
