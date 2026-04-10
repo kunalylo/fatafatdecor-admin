@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { SCREENS, api } from '../lib/constants'
+import { api } from '../lib/constants'
 
 export const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
 
 export function AppProvider({ children }) {
   const [user, setUser]                   = useState(null)
-  const [authMode, setAuthMode]           = useState('login')
   const [loading, setLoading]             = useState(false)
   const [toast, setToast]                 = useState(null)
   const [authForm, setAuthForm]           = useState({ email: '', password: '' })
@@ -30,26 +29,42 @@ export function AppProvider({ children }) {
     setTimeout(() => setToast(null), 3500)
   }, [])
 
-  // ── Persist admin session to localStorage ──
+  // ── Restore session from localStorage ──
   useEffect(() => {
     try {
       const saved = localStorage.getItem('fd_admin_user')
       if (saved) {
         const parsed = JSON.parse(saved)
-        setUser(parsed)
+        if (parsed && (parsed.role === 'admin' || parsed.role === 'sub_admin')) {
+          setUser(parsed)
+        } else {
+          localStorage.removeItem('fd_admin_user')
+          localStorage.removeItem('admin_token')
+        }
       }
-    } catch (e) { localStorage.removeItem('fd_admin_user') }
+    } catch { localStorage.removeItem('fd_admin_user') }
   }, [])
 
+  // ── Persist user to localStorage ──
   useEffect(() => {
     if (user) {
-      try { localStorage.setItem('fd_admin_user', JSON.stringify(user)) } catch (e) {}
+      try { localStorage.setItem('fd_admin_user', JSON.stringify(user)) } catch {}
     } else {
       localStorage.removeItem('fd_admin_user')
     }
   }, [user])
 
-  // Load admin data after login
+  // ── Listen for auth-expired (401 from api helper) ──
+  useEffect(() => {
+    const onExpired = () => {
+      setUser(null)
+      showToast('Session expired. Please log in again.', 'error')
+    }
+    window.addEventListener('fd:auth-expired', onExpired)
+    return () => window.removeEventListener('fd:auth-expired', onExpired)
+  }, [showToast])
+
+  // ── Load admin data after login ──
   useEffect(() => {
     if (user?.role === 'admin' || user?.role === 'sub_admin') {
       const perms = user?.permissions || []
@@ -61,25 +76,48 @@ export function AppProvider({ children }) {
   }, [user])
 
   const handleAuth = async () => {
+    const email = authForm.email?.trim()
+    const password = authForm.password
+    if (!email) { showToast('Email is required', 'error'); return }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) { showToast('Please enter a valid email', 'error'); return }
+    if (!password || password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return }
+
     setLoading(true)
     try {
       const data = await api('auth/login', {
         method: 'POST',
-        body: { email: authForm.email, password: authForm.password }
+        body: { email, password }
       })
       if (data.error) { showToast(data.error, 'error'); return }
       if (data.role !== 'admin' && data.role !== 'sub_admin') {
         showToast('Admin access required', 'error'); return
       }
-      setUser(data)
-      showToast(`Welcome back, ${data.name}!`, 'success')
+      // Save JWT token if present
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token)
+      }
+      // Strip token from user object before storing
+      const { token, ...userData } = data
+      setUser(userData)
+      showToast(`Welcome back, ${userData.name}!`, 'success')
     } catch (e) { showToast('Login failed', 'error') }
     finally { setLoading(false) }
   }
 
+  const handleLogout = useCallback(() => {
+    setUser(null)
+    localStorage.removeItem('admin_token')
+    localStorage.removeItem('fd_admin_user')
+    setItems([])
+    setDeliveryPersons([])
+    setOrders([])
+    setAdminTab('dashboard')
+    showToast('Logged out successfully', 'success')
+  }, [showToast])
+
   const ctxValue = {
     user, setUser,
-    authMode, setAuthMode,
     loading, setLoading,
     toast, setToast,
     authForm, setAuthForm,
@@ -93,6 +131,7 @@ export function AppProvider({ children }) {
     scanAnalysis, setScanAnalysis,
     showToast,
     handleAuth,
+    handleLogout,
   }
 
   return (

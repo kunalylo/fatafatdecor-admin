@@ -23,7 +23,10 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
 const STATUS_COLORS = {
   pending:    'bg-yellow-100 text-yellow-700',
   assigned:   'bg-blue-100 text-blue-700',
+  en_route:   'bg-indigo-100 text-indigo-700',
+  arrived:    'bg-cyan-100 text-cyan-700',
   decorating: 'bg-purple-100 text-purple-700',
+  delivered:  'bg-emerald-100 text-emerald-700',
   completed:  'bg-green-100 text-green-700',
   cancelled:  'bg-red-100 text-red-700',
 }
@@ -38,7 +41,7 @@ export default function AdminDashboard() {
 
   const totalRevenue    = orders.reduce((s, o) => s + (o.payment_amount || 0), 0)
   const pendingOrders   = orders.filter(o => o.delivery_status === 'pending').length
-  const activeOrders    = orders.filter(o => ['assigned','decorating'].includes(o.delivery_status)).length
+  const activeOrders    = orders.filter(o => ['assigned','en_route','arrived','decorating'].includes(o.delivery_status)).length
   const completedOrders = orders.filter(o => o.delivery_status === 'completed').length
   const recentOrders    = orders.slice(0, 8)
 

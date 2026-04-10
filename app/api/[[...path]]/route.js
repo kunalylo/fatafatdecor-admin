@@ -45,6 +45,14 @@ function ok(data) { return cors(NextResponse.json(data)) }
 function err(msg, status = 400) { return cors(NextResponse.json({ error: msg }, { status })) }
 function hashPwd(pwd) { return crypto.createHash('sha256').update(pwd).digest('hex') }
 
+function makeToken(payload) {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')
+  const body = Buffer.from(JSON.stringify({ ...payload, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 30 * 86400 })).toString('base64url')
+  const secret = process.env.JWT_SECRET || 'fatafatdecor-dev-secret'
+  const sig = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url')
+  return `${header}.${body}.${sig}`
+}
+
 export async function OPTIONS() {
   return cors(new NextResponse(null, { status: 200 }))
 }
@@ -84,7 +92,8 @@ async function handleRoute(request, { params }) {
       }
       await db.collection('users').insertOne(user)
       const { password: _, _id, ...safeUser } = user
-      return ok(safeUser)
+      const token = makeToken({ user_id: safeUser.id, role: safeUser.role })
+      return ok({ ...safeUser, token })
     }
 
     if (path[0] === 'auth' && path[1] === 'login' && method === 'POST') {
@@ -93,7 +102,8 @@ async function handleRoute(request, { params }) {
       const user = await db.collection('users').findOne({ email, password: hashPwd(password) })
       if (!user) return err('Invalid credentials', 401)
       const { password: _, _id, ...safeUser } = user
-      return ok(safeUser)
+      const token = makeToken({ user_id: safeUser.id, role: safeUser.role })
+      return ok({ ...safeUser, token })
     }
 
     // ====== AUTH GOOGLE ======
@@ -116,7 +126,8 @@ async function handleRoute(request, { params }) {
         user = { ...user, google_id, photo_url }
       }
       const { password: _, _id, ...safeUser } = user
-      return ok(safeUser)
+      const token = makeToken({ user_id: safeUser.id, role: safeUser.role })
+      return ok({ ...safeUser, token })
     }
 
     // ====== CITIES MANAGEMENT ======

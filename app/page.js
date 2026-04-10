@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Component, useState } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
 import Toast from './components/Toast'
 import AdminScreen from './screens/AdminScreen'
@@ -16,6 +16,30 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false } }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(error, info) { console.error('[FatafatDecor Admin] Crash:', error, info?.componentStack) }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-6 text-center">
+          <div className="w-16 h-16 bg-pink-500 rounded-2xl flex items-center justify-center mb-4">
+            <span className="text-3xl text-white">!</span>
+          </div>
+          <h2 className="text-lg font-bold text-white mb-2">Something went wrong</h2>
+          <p className="text-sm text-slate-400 mb-6">The admin panel encountered an unexpected error.</p>
+          <button onClick={() => { this.setState({ hasError: false }); window.location.reload() }}
+            className="px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-2xl shadow-lg">
+            Reload Panel
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // All nav items — sub-admins tab is admin-only
 const ALL_NAV_ITEMS = [
@@ -33,6 +57,9 @@ const ALL_NAV_ITEMS = [
 
 function AdminLogin() {
   const { loading, authForm, setAuthForm, handleAuth } = useApp()
+
+  const onKeyDown = (e) => { if (e.key === 'Enter' && !loading) handleAuth() }
+
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -52,6 +79,7 @@ function AdminLogin() {
             type="email"
             value={authForm.email}
             onChange={e => setAuthForm(p => ({ ...p, email: e.target.value }))}
+            onKeyDown={onKeyDown}
             className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 h-12 rounded-xl"
           />
           <Input
@@ -59,6 +87,7 @@ function AdminLogin() {
             type="password"
             value={authForm.password}
             onChange={e => setAuthForm(p => ({ ...p, password: e.target.value }))}
+            onKeyDown={onKeyDown}
             className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 h-12 rounded-xl"
           />
           <Button
@@ -69,13 +98,14 @@ function AdminLogin() {
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
           </Button>
         </div>
+        <p className="text-center text-[10px] text-slate-600 mt-4">FatafatDecor Admin v2.1</p>
       </div>
     </div>
   )
 }
 
 function AdminPanel() {
-  const { user, setUser, adminTab, setAdminTab, showToast } = useApp()
+  const { user, adminTab, setAdminTab, handleLogout } = useApp()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const isFullAdmin = user?.role === 'admin'
@@ -89,11 +119,6 @@ function AdminPanel() {
   })
 
   const activeNav = visibleNav.find(n => n.id === adminTab) || visibleNav[0]
-
-  const handleLogout = () => {
-    setUser(null)
-    showToast('Logged out successfully', 'success')
-  }
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
@@ -230,8 +255,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </ErrorBoundary>
   )
 }
