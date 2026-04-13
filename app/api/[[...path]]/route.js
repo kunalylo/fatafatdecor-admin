@@ -836,6 +836,45 @@ async function handleRoute(request, { params }) {
       const { _id, ...clean } = o; return ok(clean)
     }
 
+    // ====== ADMIN GIFTS CRUD ======
+    if (path[0] === 'admin' && path[1] === 'gifts' && !path[2] && method === 'GET') {
+      const gifts = await db.collection('gifts').find({}).sort({ sr: 1, name: 1 }).toArray()
+      return ok(gifts.map(({ _id, ...g }) => g))
+    }
+    if (path[0] === 'admin' && path[1] === 'gifts' && !path[2] && method === 'POST') {
+      const body = await request.json()
+      if (!body.name) return err('Gift name required')
+      const gift = {
+        id: uuidv4(), name: body.name, description: body.description || '',
+        price: Number(body.price) || 0, image_url: body.image_url || '',
+        sr: Number(body.sr) || 0, active: true, is_active: true,
+        created_at: new Date()
+      }
+      await db.collection('gifts').insertOne(gift)
+      const { _id, ...clean } = gift; return ok(clean)
+    }
+    if (path[0] === 'admin' && path[1] === 'gifts' && path[2] && method === 'PUT') {
+      const body = await request.json(); delete body._id
+      if (body.price !== undefined) body.price = Number(body.price)
+      if (body.sr !== undefined) body.sr = Number(body.sr)
+      if (body.active !== undefined) body.is_active = body.active
+      body.updated_at = new Date()
+      await db.collection('gifts').updateOne({ id: path[2] }, { $set: body })
+      const gift = await db.collection('gifts').findOne({ id: path[2] })
+      if (!gift) return err('Gift not found', 404)
+      const { _id, ...clean } = gift; return ok(clean)
+    }
+    if (path[0] === 'admin' && path[1] === 'gifts' && path[2] && method === 'DELETE') {
+      await db.collection('gifts').deleteOne({ id: path[2] })
+      return ok({ success: true })
+    }
+
+    // ====== ADMIN GIFT ORDERS ======
+    if (path[0] === 'admin' && path[1] === 'gift-orders' && method === 'GET') {
+      const giftOrders = await db.collection('gift_orders').find({}).sort({ created_at: -1 }).toArray()
+      return ok(giftOrders.map(({ _id, ...o }) => o))
+    }
+
     return err(`Route /${path.join('/')} not found`, 404)
   } catch (error) {
     console.error('API Error:', error)
