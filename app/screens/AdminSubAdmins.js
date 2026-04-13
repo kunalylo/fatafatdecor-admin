@@ -68,7 +68,10 @@ export default function AdminSubAdmins() {
   const handleSave = async () => {
     if (!form.name.trim())  { showToast('Name is required', 'error'); return }
     if (!form.email.trim()) { showToast('Email is required', 'error'); return }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email.trim())) { showToast('Please enter a valid email', 'error'); return }
     if (!editId && !form.password.trim()) { showToast('Password is required', 'error'); return }
+    if (form.password && form.password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return }
     if (form.permissions.length === 0) { showToast('Select at least one permission', 'error'); return }
 
     setLoading(true)

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import {
   Sparkles, Camera, Truck, Package, Plus, Trash2,
-  Loader2, CheckCircle2, Edit3, Image, Clock, Lock, Unlock, Calendar
+  Loader2, CheckCircle2, Edit3, Image, Clock, Lock, Unlock, Calendar,
+  AlertTriangle, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -428,7 +429,9 @@ export default function AdminScreen() {
   const [editingDp, setEditingDp] = useState(null)
   const [deletingDp, setDeletingDp] = useState(null)
   const [editingItem, setEditingItem] = useState(null)
+  const [deletingItem, setDeletingItem] = useState(null)
   const [editingKit, setEditingKit] = useState(null)
+  const [deletingKit, setDeletingKit] = useState(null)
   const [kits, setKits] = useState([])
   const [newKit, setNewKit] = useState({
     name: '', description: '', occasion_tags: '', room_types: '',
@@ -482,6 +485,7 @@ export default function AdminScreen() {
   const deleteKit = async (id) => {
     await api(`kits/${id}`, { method: 'DELETE' })
     setKits(prev => prev.filter(k => k.id !== id))
+    setDeletingKit(null)
     showToast('Kit deleted', 'success')
   }
 
@@ -523,7 +527,8 @@ export default function AdminScreen() {
   const deleteItem = async (id) => {
     await api(`items/${id}`, { method: 'DELETE' })
     setItems(prev => prev.filter(i => i.id !== id))
-    showToast('Deleted', 'success')
+    setDeletingItem(null)
+    showToast('Item deleted', 'success')
   }
 
   const addDeliveryPerson = async () => {
@@ -674,7 +679,7 @@ export default function AdminScreen() {
                     </div>
                     <div className="flex gap-1 shrink-0">
                       <button onClick={() => setEditingKit({ ...kit, occasion_tags: (kit.occasion_tags || []).join(', '), room_types: (kit.room_types || []).join(', ') })} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center"><Edit3 className="w-3 h-3 text-blue-500" /></button>
-                      <button onClick={() => deleteKit(kit.id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><Trash2 className="w-3 h-3 text-red-400" /></button>
+                      <button onClick={() => setDeletingKit(kit)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center hover:bg-red-100 transition-colors"><Trash2 className="w-3 h-3 text-red-400" /></button>
                     </div>
                   </div>
                   {(kit.kit_items || []).length > 0 && (
@@ -693,7 +698,7 @@ export default function AdminScreen() {
         )}
         {/* Kit Edit Modal */}
         {editingKit && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setEditingKit(null)}>
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingKit(null)}>
             <Card className="w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <CardContent className="p-4 space-y-2">
                 <h3 className="font-bold text-sm text-gray-700">Edit Kit</h3>
@@ -734,7 +739,7 @@ export default function AdminScreen() {
                 <Input placeholder="Description" value={newItem.description} onChange={e => setNewItem(p => ({ ...p, description: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
                 <div className="grid grid-cols-2 gap-2">
                   <select value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} className="h-10 bg-gray-50 rounded-lg px-3 text-sm border border-gray-200">
-                    {categories.map(c => <option key={c} value={c}>{c.replace('_', ' ')}</option>)}
+                    {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
                   </select>
                   <Input placeholder="Color" value={newItem.color} onChange={e => setNewItem(p => ({ ...p, color: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
                 </div>
@@ -762,7 +767,7 @@ export default function AdminScreen() {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-700 truncate">{item.name}</p>
-                      <p className="text-[10px] text-gray-400 capitalize">{item.category?.replace('_', ' ')} {item.color ? `• ${item.color}` : ''}</p>
+                      <p className="text-[10px] text-gray-400 capitalize">{item.category?.replace(/_/g, ' ')} {item.color ? `• ${item.color}` : ''}</p>
                       <div className="flex gap-2 text-[10px] text-gray-400">
                         <span>Rs {item.price}</span>
                         <span>Stock: {item.stock_count}</span>
@@ -771,7 +776,7 @@ export default function AdminScreen() {
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => setEditingItem({ ...item, tags: (item.tags || []).join(', ') })} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center"><Edit3 className="w-3 h-3 text-blue-500" /></button>
-                      <button onClick={() => deleteItem(item.id)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><Trash2 className="w-3 h-3 text-red-400" /></button>
+                      <button onClick={() => setDeletingItem(item)} className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center hover:bg-red-100 transition-colors"><Trash2 className="w-3 h-3 text-red-400" /></button>
                     </div>
                   </div>
                 </CardContent>
@@ -781,7 +786,7 @@ export default function AdminScreen() {
         )}
         {/* Item Edit Modal */}
         {editingItem && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setEditingItem(null)}>
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingItem(null)}>
             <Card className="w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <CardContent className="p-4 space-y-2">
                 <h3 className="font-bold text-sm text-gray-700">Edit Item</h3>
@@ -789,7 +794,7 @@ export default function AdminScreen() {
                 <Input placeholder="Description" value={editingItem.description || ''} onChange={e => setEditingItem(p => ({ ...p, description: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
                 <div className="grid grid-cols-2 gap-2">
                   <select value={editingItem.category} onChange={e => setEditingItem(p => ({ ...p, category: e.target.value }))} className="h-10 bg-gray-50 rounded-lg px-3 text-sm border border-gray-200">
-                    {categories.map(c => <option key={c} value={c}>{c.replace('_', ' ')}</option>)}
+                    {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
                   </select>
                   <Input placeholder="Color" value={editingItem.color || ''} onChange={e => setEditingItem(p => ({ ...p, color: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
                 </div>
@@ -808,6 +813,54 @@ export default function AdminScreen() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* ── Delete Item Confirm ── */}
+        {deletingItem && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">Delete Item?</h3>
+                  <p className="text-xs text-gray-400">This action cannot be undone</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-5">
+                Remove <span className="font-semibold text-gray-800">{deletingItem.name}</span> from inventory?
+              </p>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setDeletingItem(null)} className="flex-1 h-11 rounded-xl border-gray-200">Cancel</Button>
+                <Button onClick={() => deleteItem(deletingItem.id)} className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white border-0">Delete</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Delete Kit Confirm ── */}
+        {deletingKit && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-800">Delete Kit?</h3>
+                  <p className="text-xs text-gray-400">This action cannot be undone</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-5">
+                Delete kit <span className="font-semibold text-gray-800">{deletingKit.name}</span> and all its items?
+              </p>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setDeletingKit(null)} className="flex-1 h-11 rounded-xl border-gray-200">Cancel</Button>
+                <Button onClick={() => deleteKit(deletingKit.id)} className="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white border-0">Delete</Button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -864,7 +917,7 @@ export default function AdminScreen() {
 
             {/* Edit Modal */}
             {editingDp && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setEditingDp(null)}>
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingDp(null)}>
                 <Card className="w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
                   <CardContent className="p-4 space-y-3">
                     <h3 className="font-bold text-sm text-gray-700">Edit Team Member</h3>
@@ -891,7 +944,7 @@ export default function AdminScreen() {
 
             {/* Delete Confirm Modal */}
             {deletingDp && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4" onClick={() => setDeletingDp(null)}>
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDeletingDp(null)}>
                 <Card className="w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
                   <CardContent className="p-4 space-y-3">
                     <h3 className="font-bold text-sm text-gray-700">Remove Team Member?</h3>

@@ -59,6 +59,13 @@ export default function AdminUsers() {
   const handleSave = async () => {
     if (!form.name.trim())  { showToast('Name is required', 'error'); return }
     if (!form.email.trim()) { showToast('Email is required', 'error'); return }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email.trim())) { showToast('Please enter a valid email', 'error'); return }
+    if (form.phone) {
+      const clean = form.phone.replace(/\D/g, '')
+      if (clean.length !== 10) { showToast('Phone must be 10 digits', 'error'); return }
+    }
+    if (form.new_password && form.new_password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return }
 
     setLoading(true)
     const body = {
