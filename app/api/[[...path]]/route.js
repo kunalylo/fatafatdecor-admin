@@ -53,6 +53,23 @@ function makeToken(payload) {
   return `${header}.${body}.${sig}`
 }
 
+function verifyAdminToken(request) {
+  try {
+    const auth = request.headers.get('authorization') || ''
+    if (!auth.startsWith('Bearer ')) return null
+    const token = auth.slice(7)
+    const [headerB64, bodyB64, sig] = token.split('.')
+    if (!headerB64 || !bodyB64 || !sig) return null
+    const secret = process.env.JWT_SECRET || 'fatafatdecor-dev-secret'
+    const expected = crypto.createHmac('sha256', secret).update(`${headerB64}.${bodyB64}`).digest('base64url')
+    if (expected !== sig) return null
+    const payload = JSON.parse(Buffer.from(bodyB64, 'base64url').toString())
+    if (payload.exp < Math.floor(Date.now() / 1000)) return null
+    if (payload.role !== 'admin' && payload.role !== 'sub_admin') return null
+    return payload
+  } catch { return null }
+}
+
 export async function OPTIONS() {
   return cors(new NextResponse(null, { status: 200 }))
 }
@@ -104,6 +121,14 @@ async function handleRoute(request, { params }) {
       const { password: _, _id, ...safeUser } = user
       const token = makeToken({ user_id: safeUser.id, role: safeUser.role })
       return ok({ ...safeUser, token })
+    }
+
+    // ====== ADMIN AUTH GATE — all routes below require admin/sub_admin JWT ======
+    const PUBLIC_PATHS = [['auth', 'register'], ['auth', 'login'], ['auth', 'google']]
+    const isPublic = PUBLIC_PATHS.some(([p0, p1]) => path[0] === p0 && path[1] === p1)
+    if (!isPublic) {
+      const adminPayload = verifyAdminToken(request)
+      if (!adminPayload) return err('Unauthorized: admin token required', 401)
     }
 
     // ====== AUTH GOOGLE ======
