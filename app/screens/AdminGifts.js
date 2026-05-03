@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-const EMPTY_FORM = { name: '', description: '', price: '', image_url: '', sr: '' }
+const EMPTY_FORM = { name: '', description: '', price: '', image_url: '', sr: '', category: '', colour: '#ff69b4' }
 
 const STATUS_STYLES = {
   pending:    'bg-yellow-100 text-yellow-700',
@@ -58,6 +58,8 @@ function GiftCatalog() {
       price: gift.price?.toString() || '',
       image_url: gift.image_url || '',
       sr: gift.sr?.toString() || '',
+      category: gift.category || '',
+      colour: gift.colour || '#ff69b4',
     })
     setShowForm(true)
   }
@@ -73,6 +75,8 @@ function GiftCatalog() {
       price: Number(form.price),
       image_url: form.image_url.trim(),
       sr: Number(form.sr) || 0,
+      category: form.category.trim(),
+      colour: form.colour || '#ff69b4',
     }
 
     if (editGift) {
@@ -192,6 +196,18 @@ function GiftCatalog() {
                   </span>
                 </div>
 
+                {/* Category + Colour */}
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  {gift.category && (
+                    <span className="text-[11px] bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full">{gift.category}</span>
+                  )}
+                  {gift.colour && (
+                    <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                      <span className="inline-block w-3 h-3 rounded-full border border-gray-200" style={{ backgroundColor: gift.colour }} />
+                      {gift.colour}
+                    </span>
+                  )}
+                </div>
                 {/* Sort order */}
                 {gift.sr > 0 && <p className="text-[10px] text-gray-400 mb-3">Sort order: {gift.sr}</p>}
 
@@ -273,6 +289,29 @@ function GiftCatalog() {
                     onChange={e => setForm(f => ({ ...f, sr: e.target.value }))}
                     className="h-11 rounded-xl border-gray-200"
                   />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Category</label>
+                  <Input
+                    placeholder="e.g. Flowers, Cakes"
+                    value={form.category}
+                    onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                    className="h-11 rounded-xl border-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Colour</label>
+                  <div className="flex items-center gap-2 h-11 rounded-xl border border-gray-200 px-3 bg-white">
+                    <input
+                      type="color"
+                      value={form.colour}
+                      onChange={e => setForm(f => ({ ...f, colour: e.target.value }))}
+                      className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent p-0"
+                    />
+                    <span className="text-sm text-gray-600 font-mono">{form.colour}</span>
+                  </div>
                 </div>
               </div>
               <div>
