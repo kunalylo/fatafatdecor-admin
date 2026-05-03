@@ -508,8 +508,9 @@ function GiftOrders() {
     return matchesFilter && matchesSearch
   })
 
-  const paidCount = orders.filter(o => o.payment_status === 'full').length
-  const totalRevenue = orders.reduce((s, o) => s + (o.gift_total || o.payment_amount || 0), 0)
+  const paidOrders = orders.filter(o => o.payment_status === 'full')
+  const paidCount = paidOrders.length
+  const totalRevenue = paidOrders.reduce((s, o) => s + (o.gift_total || o.payment_amount || 0), 0)
 
   return (
     <div className="space-y-4">
