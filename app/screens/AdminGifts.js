@@ -354,11 +354,30 @@ function GiftCatalog() {
                   <div className="flex items-center gap-2 h-11 rounded-xl border border-gray-200 px-3 bg-white">
                     <input
                       type="color"
+                      value={/^#[0-9a-fA-F]{6}$/.test(form.colour) ? form.colour : '#ff69b4'}
+                      onChange={e => setForm(f => ({ ...f, colour: e.target.value }))}
+                      className="w-7 h-7 rounded-md cursor-pointer border-0 bg-transparent p-0 shrink-0"
+                    />
+                    <input
+                      type="text"
                       value={form.colour}
                       onChange={e => setForm(f => ({ ...f, colour: e.target.value }))}
-                      className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent p-0"
+                      placeholder="#ff69b4"
+                      maxLength={7}
+                      className="flex-1 text-sm font-mono text-gray-700 outline-none bg-transparent placeholder-gray-300"
                     />
-                    <span className="text-sm text-gray-600 font-mono">{form.colour}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {['#ff69b4','#e91e63','#9c27b0','#3f51b5','#2196f3','#00bcd4','#4caf50','#ff9800','#f44336','#795548','#ffffff','#000000'].map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, colour: c }))}
+                        title={c}
+                        className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${form.colour === c ? 'border-gray-500 scale-110' : 'border-gray-200'}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
