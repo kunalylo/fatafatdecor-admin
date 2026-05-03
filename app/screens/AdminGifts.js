@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../lib/constants'
 import { useApp } from '../context/AppContext'
 import {
   Gift, Plus, Pencil, Trash2, X, Loader2, AlertTriangle,
   ToggleLeft, ToggleRight, Check, Package, Search, RefreshCw,
-  ChevronDown, ChevronUp, MapPin, Clock, User
+  ChevronDown, ChevronUp, MapPin, Clock, User, Upload, ImageIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-const EMPTY_FORM = { name: '', description: '', price: '', image_url: '', sr: '', category: '', colour: '#ff69b4' }
+const EMPTY_FORM = { name: '', description: '', price: '', image_url: '', sr: '', category: '', colour: '#ff69b4', occasion: '' }
 
 const STATUS_STYLES = {
   pending:    'bg-yellow-100 text-yellow-700',
@@ -34,6 +34,49 @@ function GiftCatalog() {
   const [editGift, setEditGift]   = useState(null)
   const [form, setForm]           = useState(EMPTY_FORM)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return }
+    if (file.size > 15 * 1024 * 1024) { showToast('Image must be under 15MB', 'error'); return }
+    setUploadingImage(true)
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas')
+        const img = new Image()
+        const reader = new FileReader()
+        reader.onload = (ev) => { img.src = ev.target.result }
+        img.onload = () => {
+          const MAX = 800
+          let { width, height } = img
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+            else { width = Math.round(width * MAX / height); height = MAX }
+          }
+          canvas.width = width; canvas.height = height
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+          resolve(canvas.toDataURL('image/jpeg', 0.82))
+        }
+        img.onerror = reject
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const ext = file.name.split('.').pop() || 'jpg'
+      const fileName = `gift_${Date.now()}.${ext}`
+      const d = await api('imagekit/upload', { method: 'POST', body: { file_base64: base64, file_name: fileName, folder: '/gifts' } })
+      if (d.error) { showToast('Upload failed: ' + d.error, 'error'); return }
+      setForm(f => ({ ...f, image_url: d.url }))
+      showToast('Image uploaded', 'success')
+    } catch {
+      showToast('Upload failed. Please try again.', 'error')
+    } finally {
+      setUploadingImage(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const fetchGifts = useCallback(async () => {
     setFetching(true)
@@ -60,6 +103,7 @@ function GiftCatalog() {
       sr: gift.sr?.toString() || '',
       category: gift.category || '',
       colour: gift.colour || '#ff69b4',
+      occasion: gift.occasion || '',
     })
     setShowForm(true)
   }
@@ -77,6 +121,7 @@ function GiftCatalog() {
       sr: Number(form.sr) || 0,
       category: form.category.trim(),
       colour: form.colour || '#ff69b4',
+      occasion: form.occasion.trim(),
     }
 
     if (editGift) {
@@ -196,10 +241,13 @@ function GiftCatalog() {
                   </span>
                 </div>
 
-                {/* Category + Colour */}
+                {/* Category + Occasion + Colour */}
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   {gift.category && (
                     <span className="text-[11px] bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full">{gift.category}</span>
+                  )}
+                  {gift.occasion && (
+                    <span className="text-[11px] bg-orange-50 text-orange-600 font-semibold px-2 py-0.5 rounded-full">{gift.occasion}</span>
                   )}
                   {gift.colour && (
                     <span className="flex items-center gap-1 text-[11px] text-gray-500">
@@ -315,16 +363,47 @@ function GiftCatalog() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Image URL</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Occasion</label>
                 <Input
-                  placeholder="https://..."
-                  value={form.image_url}
-                  onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+                  placeholder="e.g. Birthday, Wedding, Anniversary"
+                  value={form.occasion}
+                  onChange={e => setForm(f => ({ ...f, occasion: e.target.value }))}
                   className="h-11 rounded-xl border-gray-200"
                 />
-                {form.image_url && (
-                  <img src={form.image_url} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-xl border border-gray-200"
-                    onError={e => { e.target.style.display = 'none' }} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Gift Image</label>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                {form.image_url ? (
+                  <div className="relative">
+                    <img src={form.image_url} alt="Preview" className="w-full h-36 object-cover rounded-xl border border-gray-200" />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white rounded-lg text-xs font-semibold text-gray-700 shadow border border-gray-200 transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5" /> Change
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+                      className="absolute top-2 right-2 w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow border border-gray-200"
+                    >
+                      <X className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="w-full h-32 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:border-pink-300 hover:bg-pink-50/30 transition-colors disabled:opacity-60"
+                  >
+                    {uploadingImage
+                      ? <><Loader2 className="w-6 h-6 animate-spin text-pink-400" /><span className="text-xs text-gray-400">Uploading...</span></>
+                      : <><ImageIcon className="w-7 h-7 text-gray-300" /><span className="text-sm font-semibold text-gray-400">Click to upload image</span><span className="text-xs text-gray-300">JPG, PNG, WEBP · max 15 MB</span></>
+                    }
+                  </button>
                 )}
               </div>
             </div>
