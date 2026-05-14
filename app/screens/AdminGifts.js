@@ -6,7 +6,7 @@ import { useApp } from '../context/AppContext'
 import {
   Gift, Plus, Pencil, Trash2, X, Loader2, AlertTriangle,
   ToggleLeft, ToggleRight, Check, Package, Search, RefreshCw,
-  ChevronDown, ChevronUp, MapPin, Clock, User, Upload, ImageIcon
+  ChevronDown, ChevronUp, MapPin, Clock, User, Upload, ImageIcon, Sparkles
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +35,9 @@ function GiftCatalog() {
   const [form, setForm]           = useState(EMPTY_FORM)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
   const fileInputRef = useRef(null)
+  const aiFileRef = useRef(null)
 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0]
@@ -77,6 +79,45 @@ function GiftCatalog() {
       setUploadingImage(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  const handleAiFill = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { showToast('Please select an image', 'error'); return }
+    if (file.size > 20 * 1024 * 1024) { showToast('Image must be under 20MB', 'error'); return }
+    setAiLoading(true)
+    try {
+      const base64 = await new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas')
+        const img = new Image()
+        const reader = new FileReader()
+        reader.onload = (ev) => { img.src = ev.target.result }
+        img.onload = () => {
+          const MAX = 1200
+          let { width, height } = img
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+            else { width = Math.round(width * MAX / height); height = MAX }
+          }
+          canvas.width = width; canvas.height = height
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+          resolve(canvas.toDataURL('image/jpeg', 0.85))
+        }
+        img.onerror = reject; reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const d = await api('admin/gifts/ai-fill', { method: 'POST', body: { image_base64: base64 } })
+      if (d.error) { showToast('AI fill failed: ' + d.error, 'error'); return }
+      setForm({
+        name: d.name || '', description: d.description || '',
+        price: d.price?.toString() || '', stock: d.stock?.toString() || '100',
+        category: d.category || '', colour: d.colour || '#ff69b4',
+        occasion: d.occasion || '', images: d.images || []
+      })
+      showToast('AI filled all details! Review and save.', 'success')
+    } catch { showToast('AI fill failed. Try again.', 'error') }
+    finally { setAiLoading(false); if (aiFileRef.current) aiFileRef.current.value = '' }
   }
 
   const fetchGifts = useCallback(async () => {
@@ -309,6 +350,23 @@ function GiftCatalog() {
             </div>
 
             <div className="p-5 space-y-4">
+              {/* AI Auto-Fill */}
+              <div>
+                <input ref={aiFileRef} type="file" accept="image/*" onChange={handleAiFill} className="hidden" />
+                <button
+                  type="button"
+                  onClick={() => aiFileRef.current?.click()}
+                  disabled={aiLoading || loading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 text-white font-semibold text-sm hover:from-violet-600 hover:to-pink-600 transition-all disabled:opacity-60"
+                >
+                  {aiLoading ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> AI analyzing &amp; generating images...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4" /> AI Auto-Fill — Upload 1 Image</>
+                  )}
+                </button>
+                {aiLoading && <p className="text-xs text-center text-gray-400 mt-1.5">Analyzing image &amp; generating 10 product photos (~15s)</p>}
+              </div>
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Gift Name <span className="text-red-400">*</span></label>
                 <Input
