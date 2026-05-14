@@ -1028,6 +1028,14 @@ async function handleRoute(request, { params }) {
       const giftOrders = await db.collection('gift_orders').find({}).sort({ created_at: -1 }).toArray()
       return ok(giftOrders.map(({ _id, ...o }) => o))
     }
+    if (path[0] === 'admin' && path[1] === 'gift-orders' && path[2] && method === 'PUT') {
+      const body = await request.json(); delete body._id
+      body.updated_at = new Date()
+      await db.collection('gift_orders').updateOne({ id: path[2] }, { $set: body })
+      const order = await db.collection('gift_orders').findOne({ id: path[2] })
+      if (!order) return err('Gift order not found', 404)
+      const { _id, ...clean } = order; return ok(clean)
+    }
 
     return err(`Route /${path.join('/')} not found`, 404)
   } catch (error) {

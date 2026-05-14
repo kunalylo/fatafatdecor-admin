@@ -6,7 +6,8 @@ import { useApp } from '../context/AppContext'
 import {
   Gift, Plus, Pencil, Trash2, X, Loader2, AlertTriangle,
   ToggleLeft, ToggleRight, Check, Package, Search, RefreshCw,
-  ChevronDown, ChevronUp, MapPin, Clock, User, Upload, ImageIcon, Sparkles
+  ChevronDown, ChevronUp, MapPin, Clock, User, Upload, ImageIcon, Sparkles,
+  Copy, ChevronLeft, ChevronRight, Eye, ArrowUpDown
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,11 @@ function GiftCatalog() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
+  const [search, setSearch]             = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [sortBy, setSortBy]             = useState('name')
+  const [galleryGift, setGalleryGift]   = useState(null)
+  const [galleryIndex, setGalleryIndex] = useState(0)
   const fileInputRef = useRef(null)
   const aiFileRef = useRef(null)
 
@@ -203,6 +209,41 @@ function GiftCatalog() {
 
   const isActive = (g) => g.active === true || g.is_active === true
   const activeCount = gifts.filter(isActive).length
+  const lowStockCount = gifts.filter(g => isActive(g) && (g.stock || 0) < 5).length
+  const categories = [...new Set(gifts.map(g => g.category).filter(Boolean))]
+
+  const handleDuplicate = (gift) => {
+    setEditGift(null)
+    setForm({
+      name: gift.name + ' (Copy)', description: gift.description || '',
+      price: gift.price?.toString() || '',
+      images: gift.images?.length ? [...gift.images] : (gift.image_url ? [gift.image_url] : []),
+      stock: '100', category: gift.category || '',
+      colour: gift.colour || '#ff69b4', occasion: gift.occasion || '',
+    })
+    setShowForm(true)
+  }
+
+  const openGallery = (gift, index = 0) => {
+    setGalleryGift(gift)
+    setGalleryIndex(index)
+  }
+
+  const filteredGifts = gifts
+    .filter(g => {
+      const matchSearch = !search || g.name?.toLowerCase().includes(search.toLowerCase()) || g.description?.toLowerCase().includes(search.toLowerCase())
+      const matchCat = categoryFilter === 'all' || g.category === categoryFilter
+      return matchSearch && matchCat
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc':  return (a.price || 0) - (b.price || 0)
+        case 'price_desc': return (b.price || 0) - (a.price || 0)
+        case 'stock_low':  return (a.stock || 0) - (b.stock || 0)
+        case 'newest':     return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+        default:           return (a.name || '').localeCompare(b.name || '')
+      }
+    })
 
   return (
     <div className="space-y-6">
@@ -213,7 +254,7 @@ function GiftCatalog() {
           <p className="text-sm text-gray-400 mt-0.5">
             <span className="text-green-600 font-semibold">{activeCount} active</span>
             {gifts.length - activeCount > 0 && <span> · {gifts.length - activeCount} inactive</span>}
-            {' '}— customers can browse and order active gifts
+            {lowStockCount > 0 && <span className="text-red-400"> · {lowStockCount} low stock</span>}
           </p>
         </div>
         <Button
@@ -224,6 +265,43 @@ function GiftCatalog() {
           Add Gift
         </Button>
       </div>
+
+      {/* Search + Filter + Sort */}
+      {gifts.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search gifts..."
+              className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
+            />
+          </div>
+          {categories.length > 0 && (
+            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
+              className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
+              <option value="all">All Categories</option>
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+            className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
+            <option value="name">Sort: Name A-Z</option>
+            <option value="price_asc">Sort: Price Low→High</option>
+            <option value="price_desc">Sort: Price High→Low</option>
+            <option value="stock_low">Sort: Stock Low→High</option>
+            <option value="newest">Sort: Newest First</option>
+          </select>
+        </div>
+      )}
+
+      {/* Low Stock Alert */}
+      {lowStockCount > 0 && !fetching && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-100 rounded-xl">
+          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+          <p className="text-sm text-red-600"><span className="font-semibold">{lowStockCount} gift{lowStockCount > 1 ? 's' : ''}</span> with stock below 5 — consider restocking</p>
+        </div>
+      )}
 
       {/* Gift Grid */}
       {fetching ? (
@@ -238,100 +316,91 @@ function GiftCatalog() {
             <Plus className="w-4 h-4 mr-2" /> Add First Gift
           </Button>
         </div>
-      ) : (
+      ) : (<>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {gifts.map(gift => (
+          {filteredGifts.map(gift => {
+            const imgs = gift.images?.length ? gift.images : (gift.image_url ? [gift.image_url] : [])
+            const stockLow = isActive(gift) && (gift.stock || 0) < 5
+            return (
             <div
               key={gift.id}
               className={`bg-white rounded-2xl border-2 shadow-sm overflow-hidden transition-all
-                ${isActive(gift) ? 'border-green-100' : 'border-gray-100 opacity-60'}`}
+                ${stockLow ? 'border-red-200' : isActive(gift) ? 'border-green-100' : 'border-gray-100 opacity-60'}`}
             >
-              {/* Image */}
-              {(() => {
-                const imgs = gift.images?.length ? gift.images : (gift.image_url ? [gift.image_url] : [])
-                return imgs.length > 0 ? (
-                  <div className="relative">
-                    <img src={imgs[0]} alt={gift.name} className="w-full h-40 object-cover" />
-                    {imgs.length > 1 && (
-                      <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                        +{imgs.length - 1}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <div className="w-full h-40 bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-                    <Gift className="w-12 h-12 text-pink-200" />
-                  </div>
-                )
-              })()}
+              {/* Image — clickable for gallery */}
+              {imgs.length > 0 ? (
+                <div className="relative cursor-pointer group" onClick={() => openGallery(gift)}>
+                  <img src={imgs[0]} alt={gift.name} className="w-full h-40 object-cover group-hover:brightness-90 transition" />
+                  {imgs.length > 1 && (
+                    <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                      +{imgs.length - 1}
+                    </span>
+                  )}
+                  <span className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                    <Eye className="w-3 h-3" /> View
+                  </span>
+                  {stockLow && <span className="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">LOW STOCK</span>}
+                </div>
+              ) : (
+                <div className="w-full h-40 bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+                  <Gift className="w-12 h-12 text-pink-200" />
+                </div>
+              )}
 
               <div className="p-4">
-                {/* Name + Toggle */}
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0 mr-2">
                     <p className="font-bold text-gray-800 text-sm leading-tight truncate">{gift.name}</p>
-                    {gift.description && (
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{gift.description}</p>
-                    )}
+                    {gift.description && <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{gift.description}</p>}
                   </div>
-                  <button
-                    onClick={() => handleToggleActive(gift)}
-                    title={isActive(gift) ? 'Deactivate' : 'Activate'}
-                    className="shrink-0"
-                  >
-                    {isActive(gift)
-                      ? <ToggleRight className="w-7 h-7 text-green-500" />
-                      : <ToggleLeft className="w-7 h-7 text-gray-300" />}
+                  <button onClick={() => handleToggleActive(gift)} title={isActive(gift) ? 'Deactivate' : 'Activate'} className="shrink-0">
+                    {isActive(gift) ? <ToggleRight className="w-7 h-7 text-green-500" /> : <ToggleLeft className="w-7 h-7 text-gray-300" />}
                   </button>
                 </div>
 
-                {/* Price + Status */}
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-lg font-extrabold text-pink-500">₹{gift.price?.toLocaleString('en-IN')}</p>
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold
-                    ${isActive(gift) ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                    {isActive(gift) ? <><Check className="w-3 h-3" /> Active</> : 'Inactive'}
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold
+                    ${stockLow ? 'bg-red-50 text-red-500' : (gift.stock || 0) > 0 ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                    Stock: {gift.stock || 0}
                   </span>
                 </div>
 
-                {/* Category + Occasion + Colour */}
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  {gift.category && (
-                    <span className="text-[11px] bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full">{gift.category}</span>
-                  )}
-                  {gift.occasion && (
-                    <span className="text-[11px] bg-orange-50 text-orange-600 font-semibold px-2 py-0.5 rounded-full">{gift.occasion}</span>
-                  )}
+                <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                  {gift.category && <span className="text-[10px] bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full">{gift.category}</span>}
+                  {gift.occasion && <span className="text-[10px] bg-orange-50 text-orange-600 font-semibold px-2 py-0.5 rounded-full">{gift.occasion}</span>}
                   {gift.colour && (
-                    <span className="flex items-center gap-1 text-[11px] text-gray-500">
-                      <span className="inline-block w-3 h-3 rounded-full border border-gray-200" style={{ backgroundColor: gift.colour }} />
-                      {gift.colour}
-                    </span>
+                    <span className="inline-block w-3.5 h-3.5 rounded-full border border-gray-200" style={{ backgroundColor: gift.colour }} title={gift.colour} />
                   )}
                 </div>
-                {/* Stock */}
-                <p className={`text-[10px] font-medium mb-3 ${gift.stock > 0 ? 'text-green-500' : 'text-red-400'}`}>Stock: {gift.stock || 0}</p>
 
                 {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => openEdit(gift)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-50 text-blue-500 text-xs font-semibold hover:bg-blue-100 transition-colors"
-                  >
-                    <Pencil className="w-3.5 h-3.5" /> Edit
+                <div className="flex gap-1.5">
+                  <button onClick={() => openEdit(gift)}
+                    className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-blue-50 text-blue-500 text-xs font-semibold hover:bg-blue-100 transition-colors">
+                    <Pencil className="w-3 h-3" /> Edit
                   </button>
-                  <button
-                    onClick={() => setDeleteConfirm(gift)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-50 text-red-400 text-xs font-semibold hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  <button onClick={() => handleDuplicate(gift)} title="Duplicate"
+                    className="flex items-center justify-center w-9 py-2 rounded-xl bg-violet-50 text-violet-500 hover:bg-violet-100 transition-colors">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => setDeleteConfirm(gift)} title="Delete"
+                    className="flex items-center justify-center w-9 py-2 rounded-xl bg-red-50 text-red-400 hover:bg-red-100 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
-      )}
+        {filteredGifts.length === 0 && gifts.length > 0 && (
+          <div className="text-center py-10">
+            <Search className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+            <p className="text-gray-400 text-sm">No gifts match your search</p>
+            <button onClick={() => { setSearch(''); setCategoryFilter('all') }} className="text-pink-500 text-sm font-semibold mt-2 hover:underline">Clear filters</button>
+          </div>
+        )}
+      </>)}
 
       {/* ── Add / Edit Modal ── */}
       {showForm && (
@@ -538,6 +607,43 @@ function GiftCatalog() {
           </div>
         </div>
       )}
+
+      {/* ── Image Gallery Modal ── */}
+      {galleryGift && (() => {
+        const imgs = galleryGift.images?.length ? galleryGift.images : (galleryGift.image_url ? [galleryGift.image_url] : [])
+        if (imgs.length === 0) return null
+        return (
+          <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" onClick={() => setGalleryGift(null)}>
+            <div className="relative w-full max-w-2xl px-4" onClick={e => e.stopPropagation()}>
+              <button onClick={() => setGalleryGift(null)} className="absolute -top-10 right-4 text-white/70 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+              <p className="text-white text-sm font-semibold text-center mb-3">{galleryGift.name} — {galleryIndex + 1} / {imgs.length}</p>
+              <img src={imgs[galleryIndex]} alt="" className="w-full max-h-[70vh] object-contain rounded-xl" />
+              {imgs.length > 1 && (
+                <>
+                  <button onClick={() => setGalleryIndex(i => (i - 1 + imgs.length) % imgs.length)}
+                    className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition">
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setGalleryIndex(i => (i + 1) % imgs.length)}
+                    className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition">
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                  <div className="flex justify-center gap-2 mt-4">
+                    {imgs.map((url, i) => (
+                      <button key={i} onClick={() => setGalleryIndex(i)}
+                        className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${i === galleryIndex ? 'border-pink-400 scale-105' : 'border-white/20 opacity-60 hover:opacity-100'}`}>
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
@@ -566,6 +672,17 @@ function GiftOrders() {
     if (!d.error) setOrders(Array.isArray(d) ? d : [])
     setFetching(false)
     showToast('Gift orders refreshed', 'success')
+  }
+
+  const [updatingOrder, setUpdatingOrder] = useState(null)
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    setUpdatingOrder(orderId)
+    const d = await api(`admin/gift-orders/${orderId}`, { method: 'PUT', body: { delivery_status: newStatus } })
+    setUpdatingOrder(null)
+    if (d.error) { showToast(d.error, 'error'); return }
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, delivery_status: newStatus } : o))
+    showToast(`Order status updated to ${fmtStatus(newStatus)}`, 'success')
   }
 
   const STATUSES = ['pending', 'assigned', 'en_route', 'arrived', 'delivered']
@@ -703,6 +820,21 @@ function GiftOrders() {
                             </div>
                           </div>
                         )}
+                      </div>
+
+                      {/* Update Status */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <p className="text-xs font-semibold text-gray-500 shrink-0">Update Status:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {STATUSES.map(s => (
+                            <button key={s} disabled={updatingOrder === order.id || order.delivery_status === s}
+                              onClick={() => handleUpdateOrderStatus(order.id, s)}
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold capitalize transition-colors disabled:opacity-40
+                                ${order.delivery_status === s ? 'bg-pink-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-pink-300 hover:text-pink-500'}`}>
+                              {updatingOrder === order.id ? <Loader2 className="w-3 h-3 animate-spin inline" /> : fmtStatus(s)}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       {/* Gift Items */}
