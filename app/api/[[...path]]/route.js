@@ -856,7 +856,7 @@ async function handleRoute(request, { params }) {
 
     // ====== ADMIN GIFTS CRUD ======
     if (path[0] === 'admin' && path[1] === 'gifts' && !path[2] && method === 'GET') {
-      const gifts = await db.collection('gifts').find({}).sort({ sr: 1, name: 1 }).toArray()
+      const gifts = await db.collection('gifts').find({}).sort({ name: 1 }).toArray()
       return ok(gifts.map(({ _id, ...g }) => g))
     }
     if (path[0] === 'admin' && path[1] === 'gifts' && !path[2] && method === 'POST') {
@@ -865,7 +865,7 @@ async function handleRoute(request, { params }) {
       const gift = {
         id: uuidv4(), name: body.name, description: body.description || '',
         price: Number(body.price) || 0, image_url: body.image_url || '',
-        sr: Number(body.sr) || 0, category: body.category || '',
+        stock: Number(body.stock) || 0, category: body.category || '',
         colour: body.colour || '', occasion: body.occasion || '',
         active: true, is_active: true, created_at: new Date()
       }
@@ -875,7 +875,7 @@ async function handleRoute(request, { params }) {
     if (path[0] === 'admin' && path[1] === 'gifts' && path[2] && method === 'PUT') {
       const body = await request.json(); delete body._id
       if (body.price !== undefined) body.price = Number(body.price)
-      if (body.sr !== undefined) body.sr = Number(body.sr)
+      if (body.stock !== undefined) body.stock = Number(body.stock)
       if (body.active !== undefined) body.is_active = body.active
       body.updated_at = new Date()
       await db.collection('gifts').updateOne({ id: path[2] }, { $set: body })

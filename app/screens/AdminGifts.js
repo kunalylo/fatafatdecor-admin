@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-const EMPTY_FORM = { name: '', description: '', price: '', image_url: '', sr: '', category: '', colour: '#ff69b4', occasion: '' }
+const EMPTY_FORM = { name: '', description: '', price: '', image_url: '', stock: '', category: '', colour: '#ff69b4', occasion: '' }
 
 const STATUS_STYLES = {
   pending:    'bg-yellow-100 text-yellow-700',
@@ -100,7 +100,7 @@ function GiftCatalog() {
       description: gift.description || '',
       price: gift.price?.toString() || '',
       image_url: gift.image_url || '',
-      sr: gift.sr?.toString() || '',
+      stock: gift.stock?.toString() || '',
       category: gift.category || '',
       colour: gift.colour || '#ff69b4',
       occasion: gift.occasion || '',
@@ -118,7 +118,7 @@ function GiftCatalog() {
       description: form.description.trim(),
       price: Number(form.price),
       image_url: form.image_url.trim(),
-      sr: Number(form.sr) || 0,
+      stock: Number(form.stock) || 0,
       category: form.category.trim(),
       colour: form.colour || '#ff69b4',
       occasion: form.occasion.trim(),
@@ -135,7 +135,7 @@ function GiftCatalog() {
       setLoading(false)
       if (d.error) { showToast(d.error, 'error'); return }
       showToast('Gift added', 'success')
-      setGifts(prev => [...prev, d].sort((a, b) => (a.sr || 0) - (b.sr || 0) || a.name.localeCompare(b.name)))
+      setGifts(prev => [...prev, d].sort((a, b) => a.name.localeCompare(b.name)))
     }
     setShowForm(false)
   }
@@ -256,8 +256,8 @@ function GiftCatalog() {
                     </span>
                   )}
                 </div>
-                {/* Sort order */}
-                {gift.sr > 0 && <p className="text-[10px] text-gray-400 mb-3">Sort order: {gift.sr}</p>}
+                {/* Stock */}
+                <p className={`text-[10px] font-medium mb-3 ${gift.stock > 0 ? 'text-green-500' : 'text-red-400'}`}>Stock: {gift.stock || 0}</p>
 
                 {/* Actions */}
                 <div className="flex gap-2">
@@ -317,6 +317,17 @@ function GiftCatalog() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Stock</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={form.stock}
+                    onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
+                    className="h-11 rounded-xl border-gray-200"
+                  />
+                </div>
+                <div>
                   <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Price (₹) <span className="text-red-400">*</span></label>
                   <Input
                     type="number"
@@ -324,17 +335,6 @@ function GiftCatalog() {
                     placeholder="499"
                     value={form.price}
                     onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                    className="h-11 rounded-xl border-gray-200"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Sort Order</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="0 = auto"
-                    value={form.sr}
-                    onChange={e => setForm(f => ({ ...f, sr: e.target.value }))}
                     className="h-11 rounded-xl border-gray-200"
                   />
                 </div>
