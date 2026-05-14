@@ -124,7 +124,7 @@ async function handleRoute(request, { params }) {
     }
 
     // ====== ADMIN AUTH GATE — all routes below require admin/sub_admin JWT ======
-    const PUBLIC_PATHS = [['auth', 'register'], ['auth', 'login'], ['auth', 'google']]
+    const PUBLIC_PATHS = [['auth', 'register'], ['auth', 'login'], ['auth', 'google'], ['dp', 'login']]
     const isPublic = PUBLIC_PATHS.some(([p0, p1]) => path[0] === p0 && path[1] === p1)
     if (!isPublic) {
       const adminPayload = verifyAdminToken(request)
@@ -833,6 +833,8 @@ async function handleRoute(request, { params }) {
       await db.collection('users').deleteOne({ id: path[2] })
       await db.collection('orders').deleteMany({ user_id: path[2] })
       await db.collection('designs').deleteMany({ user_id: path[2] })
+      await db.collection('gift_orders').deleteMany({ user_id: path[2] })
+      await db.collection('payments').deleteMany({ user_id: path[2] })
       return ok({ success: true })
     }
 
@@ -852,15 +854,6 @@ async function handleRoute(request, { params }) {
       return ok({ success: true, is_active: newStatus })
     }
 
-    // ====== ADMIN ORDERS — update full ======
-    if (path[0] === 'orders' && path[1] && method === 'PUT') {
-      const body = await request.json(); delete body._id
-      await db.collection('orders').updateOne({ id: path[1] }, { $set: body })
-      const o = await db.collection('orders').findOne({ id: path[1] })
-      if (!o) return err('Order not found', 404)
-      const { _id, ...clean } = o; return ok(clean)
-    }
-
     // ====== ADMIN GIFTS CRUD ======
     if (path[0] === 'admin' && path[1] === 'gifts' && !path[2] && method === 'GET') {
       const gifts = await db.collection('gifts').find({}).sort({ sr: 1, name: 1 }).toArray()
@@ -872,8 +865,9 @@ async function handleRoute(request, { params }) {
       const gift = {
         id: uuidv4(), name: body.name, description: body.description || '',
         price: Number(body.price) || 0, image_url: body.image_url || '',
-        sr: Number(body.sr) || 0, active: true, is_active: true,
-        created_at: new Date()
+        sr: Number(body.sr) || 0, category: body.category || '',
+        colour: body.colour || '', occasion: body.occasion || '',
+        active: true, is_active: true, created_at: new Date()
       }
       await db.collection('gifts').insertOne(gift)
       const { _id, ...clean } = gift; return ok(clean)
