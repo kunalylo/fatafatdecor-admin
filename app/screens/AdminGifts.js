@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-const EMPTY_FORM = { name: '', description: '', price: '', image_url: '', stock: '', category: '', colour: '#ff69b4', occasion: '' }
+const EMPTY_FORM = { name: '', description: '', price: '', images: [], stock: '', category: '', colour: '#ff69b4', occasion: '' }
 
 const STATUS_STYLES = {
   pending:    'bg-yellow-100 text-yellow-700',
@@ -42,6 +42,7 @@ function GiftCatalog() {
     if (!file) return
     if (!file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return }
     if (file.size > 15 * 1024 * 1024) { showToast('Image must be under 15MB', 'error'); return }
+    if ((form.images || []).length >= 10) { showToast('Maximum 10 images allowed', 'error'); return }
     setUploadingImage(true)
     try {
       const base64 = await new Promise((resolve, reject) => {
@@ -68,7 +69,7 @@ function GiftCatalog() {
       const fileName = `gift_${Date.now()}.${ext}`
       const d = await api('imagekit/upload', { method: 'POST', body: { file_base64: base64, file_name: fileName, folder: '/gifts' } })
       if (d.error) { showToast('Upload failed: ' + d.error, 'error'); return }
-      setForm(f => ({ ...f, image_url: d.url }))
+      setForm(f => ({ ...f, images: [...(f.images || []), d.url] }))
       showToast('Image uploaded', 'success')
     } catch {
       showToast('Upload failed. Please try again.', 'error')
@@ -99,7 +100,7 @@ function GiftCatalog() {
       name: gift.name || '',
       description: gift.description || '',
       price: gift.price?.toString() || '',
-      image_url: gift.image_url || '',
+      images: gift.images?.length ? gift.images : (gift.image_url ? [gift.image_url] : []),
       stock: gift.stock?.toString() || '',
       category: gift.category || '',
       colour: gift.colour || '#ff69b4',
@@ -117,7 +118,8 @@ function GiftCatalog() {
       name: form.name.trim(),
       description: form.description.trim(),
       price: Number(form.price),
-      image_url: form.image_url.trim(),
+      images: form.images || [],
+      image_url: (form.images || [])[0] || '',
       stock: Number(form.stock) || 0,
       category: form.category.trim(),
       colour: form.colour || '#ff69b4',
@@ -204,13 +206,23 @@ function GiftCatalog() {
                 ${isActive(gift) ? 'border-green-100' : 'border-gray-100 opacity-60'}`}
             >
               {/* Image */}
-              {gift.image_url ? (
-                <img src={gift.image_url} alt={gift.name} className="w-full h-40 object-cover" />
-              ) : (
-                <div className="w-full h-40 bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-                  <Gift className="w-12 h-12 text-pink-200" />
-                </div>
-              )}
+              {(() => {
+                const imgs = gift.images?.length ? gift.images : (gift.image_url ? [gift.image_url] : [])
+                return imgs.length > 0 ? (
+                  <div className="relative">
+                    <img src={imgs[0]} alt={gift.name} className="w-full h-40 object-cover" />
+                    {imgs.length > 1 && (
+                      <span className="absolute top-2 right-2 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                        +{imgs.length - 1}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full h-40 bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+                    <Gift className="w-12 h-12 text-pink-200" />
+                  </div>
+                )
+              })()}
 
               <div className="p-4">
                 {/* Name + Toggle */}
@@ -391,38 +403,38 @@ function GiftCatalog() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Gift Image</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Gift Images <span className="text-gray-300">({(form.images || []).length}/10)</span></label>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                {form.image_url ? (
-                  <div className="relative">
-                    <img src={form.image_url} alt="Preview" className="w-full h-36 object-cover rounded-xl border border-gray-200" />
+                <div className="grid grid-cols-5 gap-2">
+                  {(form.images || []).map((url, i) => (
+                    <div key={i} className="relative group aspect-square">
+                      <img src={url} alt={`Image ${i + 1}`} className="w-full h-full object-cover rounded-lg border border-gray-200" />
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, images: f.images.filter((_, j) => j !== i) }))}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                      {i === 0 && <span className="absolute bottom-1 left-1 bg-pink-500 text-white text-[8px] font-bold px-1 py-0.5 rounded">MAIN</span>}
+                    </div>
+                  ))}
+                  {(form.images || []).length < 10 && (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white rounded-lg text-xs font-semibold text-gray-700 shadow border border-gray-200 transition-colors"
+                      disabled={uploadingImage}
+                      className="aspect-square rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 hover:border-pink-300 hover:bg-pink-50/30 transition-colors disabled:opacity-60"
                     >
-                      <Upload className="w-3.5 h-3.5" /> Change
+                      {uploadingImage
+                        ? <Loader2 className="w-5 h-5 animate-spin text-pink-400" />
+                        : <><Plus className="w-5 h-5 text-gray-300" /><span className="text-[9px] text-gray-400">Add</span></>
+                      }
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, image_url: '' }))}
-                      className="absolute top-2 right-2 w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow border border-gray-200"
-                    >
-                      <X className="w-3.5 h-3.5 text-gray-500" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    className="w-full h-32 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:border-pink-300 hover:bg-pink-50/30 transition-colors disabled:opacity-60"
-                  >
-                    {uploadingImage
-                      ? <><Loader2 className="w-6 h-6 animate-spin text-pink-400" /><span className="text-xs text-gray-400">Uploading...</span></>
-                      : <><ImageIcon className="w-7 h-7 text-gray-300" /><span className="text-sm font-semibold text-gray-400">Click to upload image</span><span className="text-xs text-gray-300">JPG, PNG, WEBP · max 15 MB</span></>
-                    }
-                  </button>
+                  )}
+                </div>
+                {(form.images || []).length === 0 && !uploadingImage && (
+                  <p className="text-xs text-gray-300 mt-1.5">JPG, PNG, WEBP · max 15 MB each</p>
                 )}
               </div>
             </div>

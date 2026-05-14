@@ -864,7 +864,9 @@ async function handleRoute(request, { params }) {
       if (!body.name) return err('Gift name required')
       const gift = {
         id: uuidv4(), name: body.name, description: body.description || '',
-        price: Number(body.price) || 0, image_url: body.image_url || '',
+        price: Number(body.price) || 0,
+        images: Array.isArray(body.images) ? body.images : [],
+        image_url: (Array.isArray(body.images) && body.images[0]) || body.image_url || '',
         stock: Number(body.stock) || 0, category: body.category || '',
         colour: body.colour || '', occasion: body.occasion || '',
         active: true, is_active: true, created_at: new Date()
@@ -877,6 +879,7 @@ async function handleRoute(request, { params }) {
       if (body.price !== undefined) body.price = Number(body.price)
       if (body.stock !== undefined) body.stock = Number(body.stock)
       if (body.active !== undefined) body.is_active = body.active
+      if (Array.isArray(body.images)) body.image_url = body.images[0] || ''
       body.updated_at = new Date()
       await db.collection('gifts').updateOne({ id: path[2] }, { $set: body })
       const gift = await db.collection('gifts').findOne({ id: path[2] })
