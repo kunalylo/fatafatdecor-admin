@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { bracketForPrice } from '../lib/budget-brackets'
 
 // Filename pattern preview — replicates the backend parser briefly for UX feedback
 function previewParse(filename) {
@@ -201,8 +202,19 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
                 <div><span className="text-gray-500">Price:</span> <span className="font-semibold text-gray-900">{parsed.price ? `Rs ${parsed.price.toLocaleString()}` : '—'}</span></div>
                 <div><span className="text-gray-500">Occasion:</span> <span className="font-semibold text-gray-900">{parsed.occasion || '—'}</span></div>
                 <div><span className="text-gray-500">Setup:</span> <span className="font-semibold text-gray-900">{parsed.setup_type || '—'}</span></div>
+                <div>
+                  <span className="text-gray-500">Bracket:</span>{' '}
+                  <span className="font-semibold text-pink-700">
+                    {overrides.base_price ? bracketForPrice(overrides.base_price)?.label : '—'}
+                  </span>
+                </div>
                 <div className="col-span-2"><span className="text-gray-500">Theme:</span> <span className="font-semibold text-gray-900">{parsed.theme || '—'}</span></div>
               </div>
+              {overrides.base_price && (
+                <p className="mt-2 text-[11px] text-pink-700/80 italic">
+                  Customers picking <strong>{bracketForPrice(overrides.base_price)?.label}</strong> will see this reference.
+                </p>
+              )}
             </div>
           )}
 

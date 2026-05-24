@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
+import { bracketForPrice } from '../lib/budget-brackets'
 import SkuPickerModal from './SkuPickerModal'
 
 export default function ReferenceDetailScreen({ referenceId, onBack }) {
@@ -198,8 +199,9 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
         </div>
 
         {!editingMeta ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <Stat label="Base Price" value={`Rs ${ref.base_price?.toLocaleString()}`} />
+            <Stat label="Bracket"    value={bracketForPrice(ref.base_price)?.label || '—'} accent="pink" />
             <Stat label="Occasion"   value={(ref.occasion || '—').replace(/_/g, ' ')} />
             <Stat label="Theme"      value={ref.theme || '—'} />
             <Stat label="Setup"      value={ref.setup_type || '—'} />
@@ -450,11 +452,12 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
   )
 }
 
-function Stat({ label, value }) {
+function Stat({ label, value, accent }) {
+  const accentClass = accent === 'pink' ? 'text-pink-600' : 'text-gray-900'
   return (
     <div>
       <p className="text-xs text-gray-500 capitalize">{label}</p>
-      <p className="text-sm font-semibold text-gray-900 capitalize">{value}</p>
+      <p className={`text-sm font-semibold capitalize ${accentClass}`}>{value}</p>
     </div>
   )
 }

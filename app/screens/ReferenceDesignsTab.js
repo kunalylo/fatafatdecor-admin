@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Upload, Image as ImageIcon, CheckCircle, Clock, XCircle, Loader2, AlertCircle } from 'lucide-react'
+import { Upload, Image as ImageIcon, CheckCircle, Clock, XCircle, Loader2, AlertCircle, TrendingUp } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
+import { BUDGET_BRACKETS, bracketForPrice } from '../lib/budget-brackets'
 import ReferenceUploadModal from './ReferenceUploadModal'
 import ReferenceDetailScreen from './ReferenceDetailScreen'
 
@@ -28,11 +29,13 @@ export default function ReferenceDesignsTab() {
   const { showToast } = useApp()
   const [refs, setRefs] = useState([])
   const [stats, setStats] = useState(null)
+  const [coverage, setCoverage] = useState(null)
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
   const [occasion, setOccasion] = useState('')
   const [status, setStatus] = useState('')
+  const [bracket, setBracket] = useState('')
   const [sort, setSort] = useState('recent')
   const [showUpload, setShowUpload] = useState(false)
   const [selectedRef, setSelectedRef] = useState(null)
@@ -46,6 +49,7 @@ export default function ReferenceDesignsTab() {
     })
     if (occasion) params.set('occasion', occasion)
     if (status)   params.set('status', status)
+    if (bracket)  params.set('bracket', bracket)
 
     const res = await api(`admin/references?${params.toString()}`)
     setLoading(false)
@@ -55,11 +59,15 @@ export default function ReferenceDesignsTab() {
   }
 
   const loadStats = async () => {
-    const res = await api('admin/references-stats')
-    if (!res.error) setStats(res)
+    const [s, c] = await Promise.all([
+      api('admin/references-stats'),
+      api('admin/references/budget-coverage'),
+    ])
+    if (!s.error) setStats(s)
+    if (!c.error) setCoverage(c)
   }
 
-  useEffect(() => { load() }, [page, occasion, status, sort])
+  useEffect(() => { load() }, [page, occasion, status, bracket, sort])
   useEffect(() => { loadStats() }, [])
 
   // Poll while any reference is processing
@@ -91,7 +99,12 @@ export default function ReferenceDesignsTab() {
           Upload Reference
         </button>
 
-        <div className="flex gap-2 ml-auto">
+        <div className="flex gap-2 ml-auto flex-wrap">
+          <select value={bracket} onChange={e => { setBracket(e.target.value); setPage(1) }}
+            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+            <option value="">All budgets</option>
+            {BUDGET_BRACKETS.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
+          </select>
           <select value={occasion} onChange={e => { setOccasion(e.target.value); setPage(1) }}
             className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
             <option value="">All occasions</option>
@@ -115,6 +128,50 @@ export default function ReferenceDesignsTab() {
           <StatCard label="Active (Live)" value={stats.active} accent="green" />
           <StatCard label="Pending Review" value={stats.pending_review} accent="amber" />
           <StatCard label="Avg Margin" value={`${(stats.avg_margin_percent || 0).toFixed(1)}%`} accent="pink" />
+        </div>
+      )}
+
+      {/* Budget Coverage — which brackets have references, click to filter */}
+      {coverage && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-pink-500" />
+            <h4 className="font-semibold text-gray-900 text-sm">Budget Coverage</h4>
+            <span className="text-xs text-gray-500">— click a bracket to filter</span>
+          </div>
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+            {coverage.brackets.map(b => {
+              const isActive = bracket === b.id
+              const empty    = b.count === 0
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => { setBracket(isActive ? '' : b.id); setPage(1) }}
+                  className={`
+                    px-2 py-2 rounded-lg border text-center transition
+                    ${isActive ? 'bg-pink-500 border-pink-500 text-white' :
+                     empty ? 'bg-gray-50 border-gray-200 text-gray-400 hover:border-pink-300' :
+                     'bg-white border-gray-200 text-gray-800 hover:border-pink-300'}
+                  `}
+                  title={empty ? 'No references in this bracket — gap to fill' : `${b.count} references, ${b.avg_margin?.toFixed(1)}% avg margin`}
+                >
+                  <div className="text-[10px] font-mono">{b.short}</div>
+                  <div className="text-lg font-bold leading-none mt-0.5">{b.count}</div>
+                  {!empty && !isActive && (
+                    <div className={`text-[9px] mt-0.5 ${b.avg_margin >= 60 ? 'text-green-600' : b.avg_margin >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                      {b.avg_margin?.toFixed(0)}%
+                    </div>
+                  )}
+                  {empty && <div className="text-[9px] text-gray-400 mt-0.5">empty</div>}
+                </button>
+              )
+            })}
+          </div>
+          {coverage.gaps?.length > 0 && (
+            <div className="mt-3 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+              ⚠ {coverage.gaps.length} bracket × occasion gap{coverage.gaps.length === 1 ? '' : 's'} — upload references to cover popular occasions in empty brackets
+            </div>
+          )}
         </div>
       )}
 
@@ -231,7 +288,14 @@ function ReferenceCard({ reference: r, onClick }) {
         </div>
       </div>
       <div className="p-3 space-y-1">
-        <p className="text-xs text-gray-500 capitalize">{(r.occasion || '').replace(/_/g, ' ')}</p>
+        <div className="flex items-center justify-between gap-1">
+          <p className="text-xs text-gray-500 capitalize truncate">{(r.occasion || '').replace(/_/g, ' ')}</p>
+          {r.budget_bracket && (
+            <span className="text-[9px] font-mono bg-pink-50 text-pink-700 px-1.5 py-0.5 rounded shrink-0">
+              {bracketForPrice(r.base_price)?.short || ''}
+            </span>
+          )}
+        </div>
         <p className="text-sm font-semibold text-gray-900 truncate">{r.theme || 'Untitled'}</p>
         <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1">
           <span>{r.use_count || 0} uses</span>
