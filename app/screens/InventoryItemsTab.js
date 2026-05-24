@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Upload, Search, AlertTriangle, Edit2, X, RefreshCw, Plus } from 'lucide-react'
+import { Upload, Search, AlertTriangle, Edit2, X, Package } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
 

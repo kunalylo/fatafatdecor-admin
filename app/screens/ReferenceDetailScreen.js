@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowLeft, CheckCircle, XCircle, RefreshCw, Loader2, Trash2,
-  Edit2, Save, AlertTriangle, Eye, EyeOff, Plus
+  Edit2, Save, AlertTriangle, Eye, EyeOff
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'

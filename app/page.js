@@ -45,12 +45,12 @@ class ErrorBoundary extends Component {
 }
 
 // All nav items — sub-admins tab is admin-only
-// "kits" and old "items" removed — replaced by new unified "inventory" with two tabs
+// Old "kits", "items" and "AI Scanner" removed — replaced by new unified "Inventory"
+// which has two tabs: All Items (Excel) + Reference Designs (AI-cured uploads)
 const ALL_NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',   icon: LayoutDashboard, adminOnly: false },
   { id: 'orders',      label: 'Orders',       icon: ShoppingBag,    adminOnly: false },
   { id: 'inventory',   label: 'Inventory',    icon: Package,        adminOnly: false },
-  { id: 'smart',       label: 'AI Scanner',   icon: Sparkles,       adminOnly: false },
   { id: 'delivery',    label: 'Team',         icon: Users,          adminOnly: false },
   { id: 'slots',       label: 'Slots',        icon: Clock,          adminOnly: false },
   { id: 'users',       label: 'Customers',    icon: UserCheck,      adminOnly: false },
