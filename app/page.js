@@ -10,9 +10,11 @@ import AdminSubAdmins from './screens/AdminSubAdmins'
 import AdminUsers from './screens/AdminUsers'
 import AdminCities from './screens/AdminCities'
 import AdminGifts from './screens/AdminGifts'
+import InventoryScreen from './screens/InventoryScreen'
 import {
   LayoutDashboard, Sparkles, Package, Box, Users, Clock, Gift,
-  ShoppingBag, LogOut, Menu, X, ChevronRight, UserCog, UserCheck, Shield, MapPin
+  ShoppingBag, LogOut, Menu, X, ChevronRight, UserCog, UserCheck, Shield, MapPin,
+  Image as ImageIcon
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -43,12 +45,12 @@ class ErrorBoundary extends Component {
 }
 
 // All nav items — sub-admins tab is admin-only
+// "kits" and old "items" removed — replaced by new unified "inventory" with two tabs
 const ALL_NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',   icon: LayoutDashboard, adminOnly: false },
   { id: 'orders',      label: 'Orders',       icon: ShoppingBag,    adminOnly: false },
+  { id: 'inventory',   label: 'Inventory',    icon: Package,        adminOnly: false },
   { id: 'smart',       label: 'AI Scanner',   icon: Sparkles,       adminOnly: false },
-  { id: 'kits',        label: 'Kits',         icon: Package,        adminOnly: false },
-  { id: 'items',       label: 'Inventory',    icon: Box,            adminOnly: false },
   { id: 'delivery',    label: 'Team',         icon: Users,          adminOnly: false },
   { id: 'slots',       label: 'Slots',        icon: Clock,          adminOnly: false },
   { id: 'users',       label: 'Customers',    icon: UserCheck,      adminOnly: false },
@@ -239,7 +241,8 @@ function AdminPanel() {
           {adminTab === 'users'      && <AdminUsers />}
           {adminTab === 'cities'     && <AdminCities />}
           {adminTab === 'gifts'      && <AdminGifts />}
-          {!['dashboard', 'orders', 'sub-admins', 'users', 'cities', 'gifts'].includes(adminTab) && <AdminScreen />}
+          {adminTab === 'inventory'  && <InventoryScreen />}
+          {!['dashboard', 'orders', 'sub-admins', 'users', 'cities', 'gifts', 'inventory'].includes(adminTab) && <AdminScreen />}
         </main>
       </div>
     </div>
