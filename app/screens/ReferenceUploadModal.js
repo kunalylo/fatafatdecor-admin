@@ -8,17 +8,62 @@ import { useApp } from '../context/AppContext'
 function previewParse(filename) {
   if (!filename) return {}
   const base = filename.replace(/\.(jpg|jpeg|png|webp)$/i, '')
-  const priceM = base.match(/(?:rs[\s.]*)?\s*([0-9][\d,]*)/i)
-  const price = priceM ? parseInt(priceM[1].replace(/,/g, ''), 10) : null
-  const lower = base.toLowerCase()
+  const parts = base.split(/\s*[;|]\s*|\s+-\s+/).map(s => s.trim()).filter(Boolean)
 
+  // Price
+  let price = null
+  for (const p of parts) {
+    const m = p.match(/(?:rs[\s.]*)?\s*([0-9][\d,]*)/i)
+    if (m) {
+      const n = parseInt(m[1].replace(/,/g, ''), 10)
+      if (n >= 500 && n <= 200000) { price = n; break }
+    }
+  }
+
+  const lower = base.toLowerCase()
   const occasions = ['birthday','anniversary','wedding','baby shower','engagement','corporate','festival','housewarming','new year','store opening','party']
   const occasion = occasions.find(o => lower.includes(o)) || null
+
+  const setups = ['indoor','outdoor','private','venue','corporate','store']
+  const setup = setups.find(s => lower.includes(s)) || null
 
   const colors = ['pink','gold','silver','rose gold','black','white','red','blue','pastel','chrome','champagne']
   const found = colors.filter(c => lower.includes(c))
 
-  return { price, occasion, theme: found.join(', ') || null }
+  // Build theme like the backend does:
+  // 1. colors > 2. first descriptive segment (strip "theme " prefix) > 3. occasion fallback
+  const stopWords = new Set(['decoration','decorations','decor','event','celebration','celebrations','happy','beautiful','lovely','amazing','a','an','the','and','with','for','of'])
+  const pieces = []
+  if (found.length > 0) pieces.push(found.join(' and '))
+
+  for (const p of parts) {
+    const isPureRs = p.replace(/[^a-z0-9]/gi, '').match(/^rs?\d+$/i)
+    if (isPureRs) continue
+    const cleaned = p.toLowerCase()
+      .replace(/^\s*theme\s+/, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    const words = cleaned.split(' ').filter(w => w.length >= 3 && !stopWords.has(w))
+    if (words.length > 0) {
+      const phrase = words.join(' ')
+      if (!pieces.some(x => x.includes(phrase))) {
+        pieces.push(phrase)
+        break
+      }
+    }
+  }
+
+  if (pieces.length === 0) {
+    pieces.push(occasion ? (setup ? `${setup} ${occasion}` : occasion) : 'decoration')
+  }
+
+  return {
+    price,
+    occasion,
+    setup_type: setup,
+    theme: pieces.join(' — ').trim(),
+  }
 }
 
 export default function ReferenceUploadModal({ onClose, onUploaded }) {
@@ -51,7 +96,7 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
       base_price: p.price || '',
       occasion: p.occasion || '',
       theme: p.theme || '',
-      setup_type: '',
+      setup_type: p.setup_type || '',
     })
   }
 
@@ -155,6 +200,7 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div><span className="text-gray-500">Price:</span> <span className="font-semibold text-gray-900">{parsed.price ? `Rs ${parsed.price.toLocaleString()}` : '—'}</span></div>
                 <div><span className="text-gray-500">Occasion:</span> <span className="font-semibold text-gray-900">{parsed.occasion || '—'}</span></div>
+                <div><span className="text-gray-500">Setup:</span> <span className="font-semibold text-gray-900">{parsed.setup_type || '—'}</span></div>
                 <div className="col-span-2"><span className="text-gray-500">Theme:</span> <span className="font-semibold text-gray-900">{parsed.theme || '—'}</span></div>
               </div>
             </div>

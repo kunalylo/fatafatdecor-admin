@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Upload, Search, AlertTriangle, Edit2, X, Package } from 'lucide-react'
+import { Upload, Search, Edit2, X, Package } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
 
@@ -111,7 +111,7 @@ export default function InventoryItemsTab() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <p className="text-xs text-gray-500">Total SKUs</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total.toLocaleString()}</p>
@@ -123,12 +123,6 @@ export default function InventoryItemsTab() {
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <p className="text-xs text-gray-500">Colors</p>
             <p className="text-2xl font-bold text-gray-900">{stats.colors?.length || 0}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <p className="text-xs text-gray-500 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3 text-amber-500" /> Low Stock
-            </p>
-            <p className="text-2xl font-bold text-amber-600">{stats.low_stock_count || 0}</p>
           </div>
         </div>
       )}
@@ -199,7 +193,6 @@ export default function InventoryItemsTab() {
                   <th className="px-4 py-3 text-right">Size</th>
                   <th className="px-4 py-3 text-right">Cost</th>
                   <th className="px-4 py-3 text-right">Sell (2x)</th>
-                  <th className="px-4 py-3 text-right">Stock</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -215,9 +208,6 @@ export default function InventoryItemsTab() {
                     <td className="px-4 py-3 text-right text-gray-700">{item.size_inches}"</td>
                     <td className="px-4 py-3 text-right text-gray-500">Rs {item.per_unit_cost?.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right font-semibold text-pink-600">Rs {item.selling_price_per_unit?.toFixed(2)}</td>
-                    <td className={`px-4 py-3 text-right ${item.stock_count <= (item.reorder_threshold || 50) ? 'text-amber-600 font-semibold' : 'text-gray-700'}`}>
-                      {item.stock_count?.toLocaleString() ?? 0}
-                    </td>
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => setSelectedItem(item)}
@@ -277,8 +267,6 @@ function ItemEditModal({ item, onClose, onSaved }) {
     cost_price_pack: item.cost_price_pack || 0,
     per_unit_cost: item.per_unit_cost || 0,
     selling_price_per_unit: item.selling_price_per_unit || 0,
-    stock_count: item.stock_count || 0,
-    reorder_threshold: item.reorder_threshold || 50,
     source_url: item.source_url || '',
     active: item.active !== false,
   })
@@ -320,8 +308,6 @@ function ItemEditModal({ item, onClose, onSaved }) {
                 setForm(f => ({ ...f, per_unit_cost: n, selling_price_per_unit: Math.round(n * 2 * 100) / 100 }))
               }} />
             <Field label="Sell (per unit, 2x auto)" type="number" step="0.01" value={form.selling_price_per_unit} onChange={v => setForm(f => ({ ...f, selling_price_per_unit: Number(v) }))} />
-            <Field label="Stock Count" type="number" value={form.stock_count} onChange={v => setForm(f => ({ ...f, stock_count: Number(v) }))} />
-            <Field label="Reorder At" type="number" value={form.reorder_threshold} onChange={v => setForm(f => ({ ...f, reorder_threshold: Number(v) }))} />
           </div>
           <Field label="Source URL" value={form.source_url} onChange={v => setForm(f => ({ ...f, source_url: v }))} />
           <label className="flex items-center gap-2 text-sm">
