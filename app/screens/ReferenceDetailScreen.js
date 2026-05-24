@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowLeft, CheckCircle, XCircle, RefreshCw, Loader2, Trash2,
-  Edit2, Save, AlertTriangle, Eye, EyeOff
+  Edit2, Save, AlertTriangle, Eye, EyeOff, Plus
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
+import SkuPickerModal from './SkuPickerModal'
 
 export default function ReferenceDetailScreen({ referenceId, onBack }) {
   const { showToast } = useApp()
@@ -17,6 +18,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
   const [editingItems, setEditingItems] = useState(false)
   const [meta, setMeta] = useState({})
   const [items, setItems] = useState([])
+  const [showSkuPicker, setShowSkuPicker] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -247,12 +249,36 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
         </div>
       )}
 
+      {/* Empty state — let admin add items manually if AI found nothing */}
+      {items.length === 0 && ref.status !== 'processing' && ref.status !== 'error' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
+          <p className="text-sm font-semibold text-amber-900 mb-1">No items detected yet</p>
+          <p className="text-xs text-amber-700 mb-3">Re-run the AI pipeline or add items manually.</p>
+          <div className="flex gap-2 justify-center">
+            <button onClick={handleRerun} className="flex items-center gap-1 px-3 py-1.5 bg-white border border-amber-300 hover:bg-amber-100 text-amber-700 text-sm rounded font-semibold">
+              <RefreshCw className="w-3 h-3" /> Re-run AI
+            </button>
+            <button onClick={() => { setEditingItems(true); setShowSkuPicker(true) }} className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm rounded font-semibold">
+              <Plus className="w-3 h-3" /> Add Item Manually
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Detected Items */}
       {items.length > 0 && (
         <div className="bg-white rounded-2xl p-5 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h3 className="font-bold text-gray-900">Detected Items ({items.length})</h3>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              {editingItems && (
+                <button
+                  onClick={() => setShowSkuPicker(true)}
+                  className="flex items-center gap-1 px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded text-sm font-semibold"
+                >
+                  <Plus className="w-3 h-3" /> Add Item
+                </button>
+              )}
               <button onClick={handleRerun} className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900">
                 <RefreshCw className="w-3 h-3" /> Re-run AI
               </button>
@@ -410,6 +436,16 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
           </button>
         )}
       </div>
+
+      {showSkuPicker && (
+        <SkuPickerModal
+          onClose={() => setShowSkuPicker(false)}
+          onAdd={(newItem) => {
+            setItems(prev => [...prev, newItem])
+            showToast('Item added — remember to Save Items', 'success')
+          }}
+        />
+      )}
     </div>
   )
 }
