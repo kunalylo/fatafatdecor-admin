@@ -8,6 +8,7 @@ import {
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
 import { bracketForPrice } from '../lib/budget-brackets'
+import { customerBreakdown, adminMargin } from '../lib/pricing-calc'
 import SkuPickerModal from './SkuPickerModal'
 
 export default function ReferenceDetailScreen({ referenceId, onBack }) {
@@ -139,12 +140,32 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
     onBack()
   }
 
+  // Quick action: scale all item quantities proportionally so items_price_total ≈ base_price.
+  // Useful when AI undercounted but base_price is the source of truth.
+  const handleScaleToBase = () => {
+    if (totalItemsPrice <= 0) return
+    const factor = basePrice / totalItemsPrice
+    setItems(prev => prev.map(it => {
+      const newQty = Math.max(1, Math.round((Number(it.quantity) || 1) * factor))
+      return {
+        ...it,
+        quantity:   newQty,
+        line_cost:  Math.round((Number(it.unit_cost)  || 0) * newQty * 100) / 100,
+        line_price: Math.round((Number(it.unit_price) || 0) * newQty * 100) / 100,
+      }
+    }))
+    setEditingItems(true)
+    showToast(`Scaled quantities ×${factor.toFixed(2)} — remember to Save Items`, 'success')
+  }
+
   const totalItemsCost  = items.reduce((s, i) => s + (Number(i.unit_cost)  || 0) * (Number(i.quantity) || 1), 0)
   const totalItemsPrice = items.reduce((s, i) => s + (Number(i.unit_price) || 0) * (Number(i.quantity) || 1), 0)
-  const basePrice = Number(meta.base_price || ref.base_price || 0)
-  const serviceCharge = Math.max(0, basePrice - totalItemsPrice)
-  const margin = basePrice - totalItemsCost
-  const marginPct = basePrice > 0 ? (margin / basePrice) * 100 : 0
+  const basePrice       = Number(meta.base_price || ref.base_price || 0)
+  const breakdown       = customerBreakdown(basePrice)
+  const margin          = adminMargin(basePrice, totalItemsCost)
+  const itemsGap        = Math.max(0, basePrice - totalItemsPrice)
+  const itemsGapPct     = basePrice > 0 ? (itemsGap / basePrice) * 100 : 0
+  const itemsCoverPct   = basePrice > 0 ? Math.min(100, (totalItemsPrice / basePrice) * 100) : 0
 
   const StatusBadge = () => {
     const map = {
@@ -315,7 +336,11 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
                 {items.map((it, idx) => (
                   <tr key={idx} className="border-b border-gray-100">
                     <td className="py-2 pr-2">
-                      <p className="font-medium text-gray-900 text-sm">{it.sku_name || it.raw_detection}</p>
+                      <p className="font-medium text-gray-900 text-sm">
+                        {it.sku_name || it.raw_detection}
+                        {it.confidence === 'manual' && <span className="ml-2 text-[9px] uppercase bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">manual</span>}
+                        {it.confidence === 'auto_created' && <span className="ml-2 text-[9px] uppercase bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">auto-sku</span>}
+                      </p>
                       {it.matched_sku_code ? (
                         <p className="text-[10px] text-gray-500 font-mono">{it.matched_sku_code}</p>
                       ) : (
@@ -370,26 +395,86 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
         </div>
       )}
 
-      {/* Pricing Summary */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-gray-200">
-          <h3 className="font-bold text-gray-900 mb-3">Customer View</h3>
-          <div className="space-y-2 text-sm">
-            <Row label="Items (2x markup)" value={`Rs ${totalItemsPrice.toFixed(0)}`} />
-            <Row label="Setup & Service Charge" value={`Rs ${serviceCharge.toFixed(0)}`} />
-            <div className="border-t border-gray-200 my-2"></div>
-            <Row label={<strong>Total</strong>} value={<strong className="text-pink-600">Rs {basePrice.toFixed(0)}</strong>} />
+      {/* Items vs Base Price — gap indicator */}
+      {basePrice > 0 && (
+        <div className={`rounded-2xl p-4 border ${itemsGap > 0.05 * basePrice ? 'bg-amber-50 border-amber-300' : 'bg-green-50 border-green-300'}`}>
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className={`w-4 h-4 ${itemsGap > 0.05 * basePrice ? 'text-amber-600' : 'text-green-600'}`} />
+              <h4 className="font-bold text-gray-900 text-sm">
+                {itemsGap > 0.05 * basePrice
+                  ? `Items below decoration price — Rs ${itemsGap.toFixed(0)} short`
+                  : 'Items match decoration price ✓'}
+              </h4>
+            </div>
+            {itemsGap > 0.05 * basePrice && totalItemsPrice > 0 && (
+              <button
+                onClick={handleScaleToBase}
+                className="text-xs px-3 py-1 bg-white border border-amber-400 hover:bg-amber-100 text-amber-800 rounded font-semibold"
+              >
+                ↑ Scale qty ×{(basePrice / totalItemsPrice).toFixed(2)} to match
+              </button>
+            )}
           </div>
+          <div className="text-xs text-gray-700 mb-2">
+            Items at 2x = <strong>Rs {totalItemsPrice.toFixed(0)}</strong> of target <strong>Rs {basePrice.toFixed(0)}</strong>
+            {itemsGap > 0 && <> &middot; gap <strong>Rs {itemsGap.toFixed(0)}</strong> ({itemsGapPct.toFixed(1)}%)</>}
+          </div>
+          {/* Coverage bar */}
+          <div className="h-2 bg-white rounded-full overflow-hidden border border-gray-200">
+            <div
+              className={`h-full rounded-full transition-all ${itemsGap > 0.05 * basePrice ? 'bg-amber-500' : 'bg-green-500'}`}
+              style={{ width: `${itemsCoverPct}%` }}
+            />
+          </div>
+          {itemsGap > 0.05 * basePrice && (
+            <p className="text-[11px] text-gray-600 mt-2">
+              Add more items via <strong>Edit → + Add Item</strong>, or click <strong>Scale qty</strong> above
+              to bump existing quantities proportionally.
+            </p>
+          )}
         </div>
+      )}
 
-        <div className="bg-gray-900 rounded-2xl p-5 text-white">
-          <h3 className="font-bold mb-3">Admin Internal</h3>
-          <div className="space-y-2 text-sm">
-            <Row label="Procurement Cost (1x)" value={`Rs ${totalItemsCost.toFixed(0)}`} dark />
-            <Row label="Customer Pays" value={`Rs ${basePrice.toFixed(0)}`} dark />
-            <div className="border-t border-gray-700 my-2"></div>
-            <Row label="Operating Margin" value={`Rs ${margin.toFixed(0)} (${marginPct.toFixed(1)}%)`} dark accent={marginPct >= 60 ? 'green' : marginPct >= 40 ? 'amber' : 'red'} />
-          </div>
+      {/* Customer Pricing Breakdown */}
+      <div className="bg-white rounded-2xl p-5 border border-gray-200">
+        <h3 className="font-bold text-gray-900 mb-3">Customer View — What Customer Pays</h3>
+        <div className="space-y-2 text-sm">
+          <Row label="Decoration & Material (items at 2x)" value={`Rs ${breakdown.decoration_total.toLocaleString()}`} />
+          <Row label="Setup & Transportation" value={`Rs ${breakdown.setup_transport.toLocaleString()}`} sub />
+          <Row label="Platform Fee" value={`Rs ${breakdown.platform_fee}`} sub />
+          <Row label="Convenience Fee" value={`Rs ${breakdown.convenience_fee}`} sub />
+          <div className="border-t border-gray-200 my-2"></div>
+          <Row label="Subtotal" value={`Rs ${breakdown.subtotal.toLocaleString()}`} muted />
+          <Row label={`GST (${(breakdown.gst_rate * 100).toFixed(0)}%)`} value={`Rs ${breakdown.gst.toLocaleString()}`} muted />
+          <div className="border-t border-gray-200 my-2"></div>
+          <Row
+            label={<strong>Customer Total</strong>}
+            value={<strong className="text-pink-600 text-lg">Rs {breakdown.total.toLocaleString()}</strong>}
+          />
+        </div>
+        <p className="text-[10px] text-gray-400 mt-3">
+          Setup &amp; transport tiered: ≤10K→Rs 625 • 10K-20K→Rs 1,025 • &gt;20K→Rs 1,325
+        </p>
+      </div>
+
+      {/* Admin Internal — margins */}
+      <div className="bg-gray-900 rounded-2xl p-5 text-white">
+        <h3 className="font-bold mb-3">Admin Internal — Margins</h3>
+        <div className="space-y-2 text-sm">
+          <Row label="Decoration Value (selling, 2x)"  value={`Rs ${margin.decoration_total.toLocaleString()}`} dark />
+          <Row label="Item Procurement Cost (1x)"       value={`Rs ${margin.items_cost.toLocaleString()}`}      dark />
+          <div className="border-t border-gray-700 my-2"></div>
+          <Row
+            label="Material Margin"
+            value={`Rs ${margin.operating_margin.toLocaleString()} (${margin.margin_percent}%)`}
+            dark
+            accent={margin.margin_percent >= 60 ? 'green' : margin.margin_percent >= 40 ? 'amber' : 'red'}
+          />
+          <div className="border-t border-gray-700 my-2"></div>
+          <Row label="Setup Fee Collected"     value={`Rs ${breakdown.setup_transport}`} dark sub />
+          <Row label="Platform + Convenience"  value={`Rs ${breakdown.platform_fee + breakdown.convenience_fee}`} dark sub />
+          <Row label="GST Collected (pass-through)" value={`Rs ${breakdown.gst.toLocaleString()}`} dark sub />
         </div>
       </div>
 
@@ -476,15 +561,20 @@ function MetaInput({ label, value, onChange, type = 'text' }) {
   )
 }
 
-function Row({ label, value, dark, accent }) {
+function Row({ label, value, dark, accent, sub, muted }) {
   const accentClass = accent === 'green' ? (dark ? 'text-green-400' : 'text-green-600')
     : accent === 'amber' ? (dark ? 'text-amber-400' : 'text-amber-600')
     : accent === 'red'   ? (dark ? 'text-red-400'   : 'text-red-600')
     : ''
+  const labelClass = sub
+    ? (dark ? 'text-gray-400 text-xs pl-3' : 'text-gray-500 text-xs pl-3')
+    : muted
+      ? (dark ? 'text-gray-400' : 'text-gray-500')
+      : (dark ? 'text-gray-300' : 'text-gray-600')
   return (
     <div className="flex justify-between items-center">
-      <span className={dark ? 'text-gray-300' : 'text-gray-600'}>{label}</span>
-      <span className={`font-semibold ${accentClass || (dark ? 'text-white' : 'text-gray-900')}`}>{value}</span>
+      <span className={labelClass}>{label}</span>
+      <span className={`font-semibold ${accentClass || (sub || muted ? (dark ? 'text-gray-300' : 'text-gray-700') : (dark ? 'text-white' : 'text-gray-900'))}`}>{value}</span>
     </div>
   )
 }
