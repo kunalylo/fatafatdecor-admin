@@ -21,6 +21,7 @@ export default function InventoryItemsTab() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [autoOnly, setAutoOnly] = useState(false)
+  const [usedOnly, setUsedOnly] = useState(false)
   const fileInputRef = useRef(null)
 
   const loadItems = async () => {
@@ -34,6 +35,7 @@ export default function InventoryItemsTab() {
     if (color)    params.set('color', color)
     if (finish)   params.set('finish', finish)
     if (autoOnly) params.set('auto_only', 'true')
+    if (usedOnly) params.set('used_only', 'true')
 
     const res = await api(`admin/inventory/items?${params.toString()}`)
     setLoading(false)
@@ -47,7 +49,7 @@ export default function InventoryItemsTab() {
     if (!res.error) setStats(res)
   }
 
-  useEffect(() => { loadItems() }, [page, search, category, color, finish, autoOnly])
+  useEffect(() => { loadItems() }, [page, search, category, color, finish, autoOnly, usedOnly])
   useEffect(() => { loadStats() }, [])
 
   const handleImport = async (e) => {
@@ -123,11 +125,27 @@ export default function InventoryItemsTab() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <p className="text-xs text-gray-500">Total SKUs</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total.toLocaleString()}</p>
           </div>
+          <button
+            onClick={() => { setUsedOnly(true); setAutoOnly(false); setPage(1) }}
+            className={`p-4 rounded-lg border text-left transition ${usedOnly ? 'bg-green-100 border-green-400' : 'bg-white border-gray-200 hover:border-green-300'}`}
+            title="Click to filter to SKUs used in approved references"
+          >
+            <p className="text-xs text-green-700">🤖 Used in References</p>
+            <p className="text-2xl font-bold text-green-700">{(stats.used_in_references || 0).toLocaleString()}</p>
+          </button>
+          <button
+            onClick={() => { setAutoOnly(true); setUsedOnly(false); setPage(1) }}
+            className={`p-4 rounded-lg border text-left transition ${autoOnly ? 'bg-purple-100 border-purple-400' : 'bg-white border-gray-200 hover:border-purple-300'}`}
+            title="Click to filter to auto-created SKUs"
+          >
+            <p className="text-xs text-purple-700">⚡ Auto-created</p>
+            <p className="text-2xl font-bold text-purple-700">{(stats.auto_created || 0).toLocaleString()}</p>
+          </button>
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <p className="text-xs text-gray-500">Categories</p>
             <p className="text-2xl font-bold text-gray-900">{stats.categories?.length || 0}</p>
@@ -136,14 +154,6 @@ export default function InventoryItemsTab() {
             <p className="text-xs text-gray-500">Colors</p>
             <p className="text-2xl font-bold text-gray-900">{stats.colors?.length || 0}</p>
           </div>
-          <button
-            onClick={() => { setAutoOnly(true); setPage(1) }}
-            className={`p-4 rounded-lg border text-left transition ${autoOnly ? 'bg-purple-100 border-purple-400' : 'bg-white border-gray-200 hover:border-purple-300'}`}
-            title="Click to filter to auto-created SKUs only"
-          >
-            <p className="text-xs text-purple-700">⚡ Auto-created</p>
-            <p className="text-2xl font-bold text-purple-700">{(stats.auto_created || 0).toLocaleString()}</p>
-          </button>
         </div>
       )}
 
@@ -180,6 +190,14 @@ export default function InventoryItemsTab() {
               <option key={f.name} value={f.name}>{f.name} ({f.count})</option>
             ))}
           </select>
+          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm cursor-pointer hover:border-green-300">
+            <input
+              type="checkbox"
+              checked={usedOnly}
+              onChange={e => { setUsedOnly(e.target.checked); setPage(1) }}
+            />
+            <span className="text-green-700 font-semibold">🤖 Used in refs only</span>
+          </label>
           <label className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm cursor-pointer hover:border-purple-300">
             <input
               type="checkbox"
@@ -188,9 +206,9 @@ export default function InventoryItemsTab() {
             />
             <span className="text-purple-700 font-semibold">⚡ Auto-created only</span>
           </label>
-          {(category || color || finish || search || autoOnly) && (
+          {(category || color || finish || search || autoOnly || usedOnly) && (
             <button
-              onClick={() => { setCategory(''); setColor(''); setFinish(''); setSearch(''); setAutoOnly(false); setPage(1) }}
+              onClick={() => { setCategory(''); setColor(''); setFinish(''); setSearch(''); setAutoOnly(false); setUsedOnly(false); setPage(1) }}
               className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
             >
               <X className="w-3 h-3" /> Clear
@@ -226,13 +244,21 @@ export default function InventoryItemsTab() {
               </thead>
               <tbody>
                 {items.map(item => (
-                  <tr key={item.sku_code} className={`border-t border-gray-100 hover:bg-pink-50/30 ${item.auto_created ? 'bg-purple-50/40' : ''}`}>
-                    <td className="px-4 py-3 max-w-[260px]">
-                      <div className="flex items-center gap-2 flex-wrap">
+                  <tr key={item.sku_code} className={`border-t border-gray-100 hover:bg-pink-50/30 ${
+                    item.auto_created ? 'bg-purple-50/40' :
+                    item.used_in_references_count > 0 ? 'bg-green-50/30' : ''
+                  }`}>
+                    <td className="px-4 py-3 max-w-[280px]">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-mono text-xs text-gray-700 truncate">{item.sku_code}</span>
                         {item.auto_created && (
                           <span className="text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200 shrink-0">
                             ⚡ Auto-SKU
+                          </span>
+                        )}
+                        {item.used_in_references_count > 0 && (
+                          <span className="text-[9px] uppercase font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200 shrink-0">
+                            🤖 Used ×{item.used_in_references_count}
                           </span>
                         )}
                         {item.needs_review && (
