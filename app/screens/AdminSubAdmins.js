@@ -12,14 +12,13 @@ import { Input } from '@/components/ui/input'
 
 // All permission options matching the nav tab IDs
 const PERMISSION_OPTIONS = [
-  { id: 'orders',   label: 'Orders',      desc: 'View and manage orders' },
-  { id: 'smart',    label: 'AI Scanner',  desc: 'Use AI item scanner' },
-  { id: 'kits',     label: 'Kits',        desc: 'Create and edit kits' },
-  { id: 'items',    label: 'Inventory',   desc: 'Manage inventory items' },
-  { id: 'delivery', label: 'Team',        desc: 'Manage decorator team' },
-  { id: 'slots',    label: 'Slots',       desc: 'Manage delivery slots' },
-  { id: 'users',    label: 'Customers',   desc: 'View and edit customers' },
-  { id: 'cities',   label: 'Cities',      desc: 'Add/remove allowed cities' },
+  { id: 'orders',    label: 'Orders',     desc: 'View and manage orders' },
+  { id: 'inventory', label: 'Inventory',  desc: 'Manage items + AI reference designs' },
+  { id: 'delivery',  label: 'Team',       desc: 'Manage decorator team' },
+  { id: 'slots',     label: 'Slots',      desc: 'Manage delivery slots' },
+  { id: 'users',     label: 'Customers',  desc: 'View and edit customers' },
+  { id: 'gifts',     label: 'Gifts',      desc: 'Manage gift catalog and gift orders' },
+  { id: 'cities',    label: 'Cities',     desc: 'Add/remove allowed cities' },
 ]
 
 const EMPTY_FORM = { name: '', email: '', password: '', permissions: [] }

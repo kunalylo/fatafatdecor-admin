@@ -113,7 +113,18 @@ function AdminPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const isFullAdmin = user?.role === 'admin'
-  const userPerms   = user?.permissions || []
+  const rawPerms    = user?.permissions || []
+
+  // Migrate legacy permissions so existing sub-admins keep access without re-saving:
+  //   'kits' / 'items' / 'smart' → 'inventory'   (the new unified tab)
+  const userPerms = (() => {
+    const out = new Set(rawPerms)
+    if (out.has('kits') || out.has('items') || out.has('smart')) out.add('inventory')
+    out.delete('kits')
+    out.delete('items')
+    out.delete('smart')
+    return [...out]
+  })()
 
   // Filter nav: full admin sees all; sub-admin sees only permitted + dashboard
   const visibleNav = ALL_NAV_ITEMS.filter(item => {

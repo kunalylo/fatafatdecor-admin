@@ -36,18 +36,18 @@ const STATUS_COLORS = {
 
 export default function AdminDashboard() {
   const { orders, setOrders, items, deliveryPersons, showToast } = useApp()
-  const [kitsCount, setKitsCount] = useState(0)
+  const [referencesCount, setReferencesCount] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
-    api('kits').then(d => { if (Array.isArray(d)) setKitsCount(d.length) })
+    api('admin/references-stats').then(d => { if (!d.error) setReferencesCount(d.active || 0) })
   }, [])
 
   const refresh = async () => {
     setRefreshing(true)
-    const [ordersData, kitsData] = await Promise.all([api('orders'), api('kits')])
+    const [ordersData, refStats] = await Promise.all([api('orders'), api('admin/references-stats')])
     if (!ordersData.error) setOrders(ordersData)
-    if (Array.isArray(kitsData)) setKitsCount(kitsData.length)
+    if (!refStats.error)   setReferencesCount(refStats.active || 0)
     setRefreshing(false)
     showToast('Dashboard refreshed', 'success')
   }
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
         <StatCard icon={ShoppingBag} label="Total Orders" value={orders.length} sub={`${pendingOrders} pending`} color="bg-pink-500" />
         <StatCard icon={TrendingUp} label="Revenue Collected" value={`₹${totalRevenue.toLocaleString('en-IN')}`} sub={`${orders.filter(o => o.payment_status === 'partial').length} partial payments`} color="bg-emerald-500" />
         <StatCard icon={Users} label="Team Members" value={deliveryPersons.length} sub={`${activeTeam} active`} color="bg-blue-500" />
-        <StatCard icon={Box} label="Inventory" value={items.length} sub={`${kitsCount} kits`} color="bg-violet-500" />
+        <StatCard icon={Box} label="Inventory" value={items.length.toLocaleString()} sub={`${referencesCount} live references`} color="bg-violet-500" />
       </div>
 
       {/* Status Summary */}

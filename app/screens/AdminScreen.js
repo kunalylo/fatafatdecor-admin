@@ -21,7 +21,8 @@ function SmartKitCreator() {
   } = useApp()
   const [savedRefs, setSavedRefs] = useState([])
   const [kits, setKits] = useState([])
-  useEffect(() => { api('kits/reference-images').then(d => { if (Array.isArray(d)) setSavedRefs(d) }) }, [])
+  // Legacy kits/reference-images endpoint removed — SmartKitCreator is no longer in nav.
+  // (Kept the component intact to avoid breaking any deep links.)
 
   const handleScanUpload = (e) => {
     const file = e.target.files?.[0]
@@ -442,7 +443,8 @@ export default function AdminScreen() {
   const [newKitItem, setNewKitItem] = useState({ name: '', description: '', category: '', color: '', size: '', unit_price: '', quantity: '1' })
   const [kitRefImages, setKitRefImages] = useState([])
 
-  useEffect(() => { api('kits').then(d => { if (!d.error) setKits(d) }) }, [])
+  // Legacy /kits fetch removed — Kits tab no longer in nav. AdminScreen still renders
+  // for the Team and Slots tabs, and those don't need kits data.
 
   const addKitRefImage = (e) => {
     const file = e.target.files?.[0]

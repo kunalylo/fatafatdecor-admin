@@ -69,7 +69,9 @@ export function AppProvider({ children }) {
     if (user?.role === 'admin' || user?.role === 'sub_admin') {
       const perms = user?.permissions || []
       const hasAll = user?.role === 'admin'
-      if (hasAll || perms.includes('items'))    api('items').then(d => !d.error && setItems(d))
+      // Legacy permission tokens 'items', 'kits', 'smart' all map to the new 'inventory' nav
+      const hasInventory = perms.includes('inventory') || perms.includes('items') || perms.includes('kits') || perms.includes('smart')
+      if (hasAll || hasInventory)               api('admin/inventory/items?limit=200').then(d => !d.error && setItems(d.items || []))
       if (hasAll || perms.includes('delivery')) api('delivery-persons').then(d => !d.error && setDeliveryPersons(d))
       if (hasAll || perms.includes('orders'))   api('orders').then(d => !d.error && setOrders(d))
     }
