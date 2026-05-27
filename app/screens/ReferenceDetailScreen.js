@@ -188,12 +188,19 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
   return (
     <div className="p-6 space-y-5 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <button onClick={onBack} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
           <ArrowLeft className="w-4 h-4" />
           Back to References
         </button>
-        <StatusBadge />
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide">Customer Pays</p>
+            <p className="text-xl font-bold text-pink-600 leading-none">Rs {breakdown.total.toLocaleString()}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">incl. decoration Rs {breakdown.decoration_total.toLocaleString()}</p>
+          </div>
+          <StatusBadge />
+        </div>
       </div>
 
       {/* Image */}
@@ -292,16 +299,22 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
       {items.length > 0 && (
         <div className="bg-white rounded-2xl p-5 border border-gray-200">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <h3 className="font-bold text-gray-900">Detected Items ({items.length})</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-gray-900">Detected Items ({items.length})</h3>
+              {/* Item source legend */}
+              <div className="flex items-center gap-1 text-[10px]">
+                <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">🤖 AI</span>
+                <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">+ Manual</span>
+                <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">⚡ Auto-SKU</span>
+              </div>
+            </div>
             <div className="flex gap-2 items-center">
-              {editingItems && (
-                <button
-                  onClick={() => setShowSkuPicker(true)}
-                  className="flex items-center gap-1 px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded text-sm font-semibold"
-                >
-                  <Plus className="w-3 h-3" /> Add Item
-                </button>
-              )}
+              <button
+                onClick={() => { setEditingItems(true); setShowSkuPicker(true) }}
+                className="flex items-center gap-1 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-semibold"
+              >
+                <Plus className="w-4 h-4" /> Add Item Manually
+              </button>
               <button onClick={handleRerun} className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900">
                 <RefreshCw className="w-3 h-3" /> Re-run AI
               </button>
@@ -334,12 +347,20 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
               </thead>
               <tbody>
                 {items.map((it, idx) => (
-                  <tr key={idx} className="border-b border-gray-100">
+                  <tr key={idx} className={`border-b border-gray-100 ${
+                    it.confidence === 'manual' ? 'bg-blue-50/30' :
+                    it.confidence === 'auto_created' ? 'bg-purple-50/30' : ''
+                  }`}>
                     <td className="py-2 pr-2">
-                      <p className="font-medium text-gray-900 text-sm">
-                        {it.sku_name || it.raw_detection}
-                        {it.confidence === 'manual' && <span className="ml-2 text-[9px] uppercase bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">manual</span>}
-                        {it.confidence === 'auto_created' && <span className="ml-2 text-[9px] uppercase bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">auto-sku</span>}
+                      <p className="font-medium text-gray-900 text-sm flex items-center gap-2 flex-wrap">
+                        <span>{it.sku_name || it.raw_detection}</span>
+                        {it.confidence === 'manual' ? (
+                          <span className="text-[9px] uppercase font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">+ Manual</span>
+                        ) : it.confidence === 'auto_created' ? (
+                          <span className="text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">⚡ Auto-SKU</span>
+                        ) : (
+                          <span className="text-[9px] uppercase font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">🤖 AI</span>
+                        )}
                       </p>
                       {it.matched_sku_code ? (
                         <p className="text-[10px] text-gray-500 font-mono">{it.matched_sku_code}</p>

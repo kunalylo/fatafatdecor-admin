@@ -5,6 +5,7 @@ import { Upload, Image as ImageIcon, CheckCircle, Clock, XCircle, Loader2, Alert
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
 import { BUDGET_BRACKETS, bracketForPrice } from '../lib/budget-brackets'
+import { customerBreakdown } from '../lib/pricing-calc'
 import ReferenceUploadModal from './ReferenceUploadModal'
 import ReferenceDetailScreen from './ReferenceDetailScreen'
 
@@ -283,8 +284,9 @@ function ReferenceCard({ reference: r, onClick }) {
           </div>
         )}
         <StatusBadge status={r.status} />
-        <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 text-white text-xs font-bold rounded">
-          Rs {r.base_price?.toLocaleString()}
+        {/* Customer-total price chip — what the customer actually pays */}
+        <div className="absolute top-2 right-2 px-2 py-1 bg-black/75 text-white text-xs font-bold rounded shadow">
+          Rs {(r.customer_breakdown?.total || customerBreakdown(r.base_price).total).toLocaleString()}
         </div>
       </div>
       <div className="p-3 space-y-1">
@@ -297,6 +299,9 @@ function ReferenceCard({ reference: r, onClick }) {
           )}
         </div>
         <p className="text-sm font-semibold text-gray-900 truncate">{r.theme || 'Untitled'}</p>
+        <p className="text-[10px] text-gray-400">
+          Decoration Rs {r.base_price?.toLocaleString()} <span className="text-gray-300">·</span> all-inclusive
+        </p>
         <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1">
           <span>{r.use_count || 0} uses</span>
           {r.margin_percent != null && (

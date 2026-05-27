@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { bracketForPrice } from '../lib/budget-brackets'
+import { customerBreakdown } from '../lib/pricing-calc'
 
 // Filename pattern preview — replicates the backend parser briefly for UX feedback
 function previewParse(filename) {
@@ -210,11 +211,20 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
                 </div>
                 <div className="col-span-2"><span className="text-gray-500">Theme:</span> <span className="font-semibold text-gray-900">{parsed.theme || '—'}</span></div>
               </div>
-              {overrides.base_price && (
-                <p className="mt-2 text-[11px] text-pink-700/80 italic">
-                  Customers picking <strong>{bracketForPrice(overrides.base_price)?.label}</strong> will see this reference.
-                </p>
-              )}
+              {overrides.base_price && (() => {
+                const bp = Number(overrides.base_price) || 0
+                const bd = customerBreakdown(bp)
+                return (
+                  <div className="mt-3 bg-white border border-pink-200 rounded p-2 text-[11px]">
+                    <p className="text-pink-700 mb-1">
+                      Customers see total <strong className="text-pink-600 text-sm">Rs {bd.total.toLocaleString()}</strong> (decoration Rs {bp.toLocaleString()} + setup Rs {bd.setup_transport} + fees Rs {bd.platform_fee + bd.convenience_fee} + GST Rs {bd.gst.toLocaleString()})
+                    </p>
+                    <p className="text-gray-500">
+                      Falls in <strong>{bracketForPrice(bp)?.label}</strong> bracket.
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
           )}
 
