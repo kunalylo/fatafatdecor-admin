@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Upload, Search, Edit2, X, Package } from 'lucide-react'
+import { Upload, Search, Edit2, X, Package, Plus } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
+import CreateItemModal from './CreateItemModal'
 
 export default function InventoryItemsTab() {
   const { showToast } = useApp()
@@ -18,6 +19,8 @@ export default function InventoryItemsTab() {
   const [finish, setFinish] = useState('')
   const [importing, setImporting] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [autoOnly, setAutoOnly] = useState(false)
   const fileInputRef = useRef(null)
 
   const loadItems = async () => {
@@ -30,6 +33,7 @@ export default function InventoryItemsTab() {
     if (category) params.set('category', category)
     if (color)    params.set('color', color)
     if (finish)   params.set('finish', finish)
+    if (autoOnly) params.set('auto_only', 'true')
 
     const res = await api(`admin/inventory/items?${params.toString()}`)
     setLoading(false)
@@ -43,7 +47,7 @@ export default function InventoryItemsTab() {
     if (!res.error) setStats(res)
   }
 
-  useEffect(() => { loadItems() }, [page, search, category, color, finish])
+  useEffect(() => { loadItems() }, [page, search, category, color, finish, autoOnly])
   useEffect(() => { loadStats() }, [])
 
   const handleImport = async (e) => {
@@ -93,6 +97,14 @@ export default function InventoryItemsTab() {
         </div>
 
         <button
+          onClick={() => setShowCreate(true)}
+          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Item
+        </button>
+
+        <button
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
           className="px-4 py-2 bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
@@ -111,7 +123,7 @@ export default function InventoryItemsTab() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <p className="text-xs text-gray-500">Total SKUs</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total.toLocaleString()}</p>
@@ -124,6 +136,14 @@ export default function InventoryItemsTab() {
             <p className="text-xs text-gray-500">Colors</p>
             <p className="text-2xl font-bold text-gray-900">{stats.colors?.length || 0}</p>
           </div>
+          <button
+            onClick={() => { setAutoOnly(true); setPage(1) }}
+            className={`p-4 rounded-lg border text-left transition ${autoOnly ? 'bg-purple-100 border-purple-400' : 'bg-white border-gray-200 hover:border-purple-300'}`}
+            title="Click to filter to auto-created SKUs only"
+          >
+            <p className="text-xs text-purple-700">⚡ Auto-created</p>
+            <p className="text-2xl font-bold text-purple-700">{(stats.auto_created || 0).toLocaleString()}</p>
+          </button>
         </div>
       )}
 
@@ -160,9 +180,17 @@ export default function InventoryItemsTab() {
               <option key={f.name} value={f.name}>{f.name} ({f.count})</option>
             ))}
           </select>
-          {(category || color || finish || search) && (
+          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm cursor-pointer hover:border-purple-300">
+            <input
+              type="checkbox"
+              checked={autoOnly}
+              onChange={e => { setAutoOnly(e.target.checked); setPage(1) }}
+            />
+            <span className="text-purple-700 font-semibold">⚡ Auto-created only</span>
+          </label>
+          {(category || color || finish || search || autoOnly) && (
             <button
-              onClick={() => { setCategory(''); setColor(''); setFinish(''); setSearch(''); setPage(1) }}
+              onClick={() => { setCategory(''); setColor(''); setFinish(''); setSearch(''); setAutoOnly(false); setPage(1) }}
               className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
             >
               <X className="w-3 h-3" /> Clear
@@ -198,8 +226,22 @@ export default function InventoryItemsTab() {
               </thead>
               <tbody>
                 {items.map(item => (
-                  <tr key={item.sku_code} className="border-t border-gray-100 hover:bg-pink-50/30">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700 max-w-[200px] truncate">{item.sku_code}</td>
+                  <tr key={item.sku_code} className={`border-t border-gray-100 hover:bg-pink-50/30 ${item.auto_created ? 'bg-purple-50/40' : ''}`}>
+                    <td className="px-4 py-3 max-w-[260px]">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs text-gray-700 truncate">{item.sku_code}</span>
+                        {item.auto_created && (
+                          <span className="text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200 shrink-0">
+                            ⚡ Auto-SKU
+                          </span>
+                        )}
+                        {item.needs_review && (
+                          <span className="text-[9px] uppercase font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">
+                            Review
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-gray-800">{item.subcategory || item.category}</td>
                     <td className="px-4 py-3">
                       <span className="inline-block px-2 py-0.5 bg-gray-100 rounded text-xs">{item.color}</span>
@@ -251,6 +293,14 @@ export default function InventoryItemsTab() {
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
           onSaved={() => { setSelectedItem(null); loadItems() }}
+        />
+      )}
+
+      {/* Create Modal */}
+      {showCreate && (
+        <CreateItemModal
+          onClose={() => setShowCreate(false)}
+          onSaved={() => { setShowCreate(false); loadItems(); loadStats() }}
         />
       )}
     </div>
