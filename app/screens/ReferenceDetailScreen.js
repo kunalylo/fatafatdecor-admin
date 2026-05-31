@@ -30,9 +30,9 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
     setRef(r)
     setMeta({
       base_price:  r.base_price,
-      occasion:    r.occasion,
+      occasions:   r.occasions   && r.occasions.length   ? r.occasions   : (r.occasion   ? [r.occasion]   : []),
+      setup_types: r.setup_types && r.setup_types.length ? r.setup_types : (r.setup_type ? [r.setup_type] : []),
       theme:       r.theme,
-      setup_type:  r.setup_type,
       ai_tags:     (r.ai_tags || []).join(', '),
     })
     setItems(r.detected_items || [])
@@ -64,9 +64,9 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
       method: 'PUT',
       body: {
         base_price: Number(meta.base_price),
-        occasion: meta.occasion,
+        occasions:   meta.occasions   || [],
+        setup_types: meta.setup_types || [],
         theme: meta.theme,
-        setup_type: meta.setup_type,
         ai_tags: tags,
       },
     })
@@ -218,7 +218,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
             </button>
           ) : (
             <div className="flex gap-2">
-              <button onClick={() => { setEditingMeta(false); setMeta({ base_price: ref.base_price, occasion: ref.occasion, theme: ref.theme, setup_type: ref.setup_type, ai_tags: (ref.ai_tags || []).join(', ') }) }} className="text-sm text-gray-600">Cancel</button>
+              <button onClick={() => { setEditingMeta(false); setMeta({ base_price: ref.base_price, occasions: ref.occasions && ref.occasions.length ? ref.occasions : (ref.occasion ? [ref.occasion] : []), setup_types: ref.setup_types && ref.setup_types.length ? ref.setup_types : (ref.setup_type ? [ref.setup_type] : []), theme: ref.theme, ai_tags: (ref.ai_tags || []).join(', ') }) }} className="text-sm text-gray-600">Cancel</button>
               <button onClick={handleSaveMeta} disabled={saving} className="flex items-center gap-1 px-3 py-1 bg-pink-500 hover:bg-pink-600 text-white text-sm rounded">
                 <Save className="w-3 h-3" /> Save
               </button>
@@ -227,22 +227,62 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
         </div>
 
         {!editingMeta ? (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-            <Stat label="Base Price" value={`Rs ${ref.base_price?.toLocaleString()}`} />
-            <Stat label="Bracket"    value={bracketForPrice(ref.base_price)?.label || '—'} accent="pink" />
-            <Stat label="Occasion"   value={(ref.occasion || '—').replace(/_/g, ' ')} />
-            <Stat label="Theme"      value={ref.theme || '—'} />
-            <Stat label="Setup"      value={ref.setup_type || '—'} />
+          <div className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <Stat label="Base Price" value={`Rs ${ref.base_price?.toLocaleString()}`} />
+              <Stat label="Bracket"    value={bracketForPrice(ref.base_price)?.label || '—'} accent="pink" />
+              <Stat label="Theme"      value={ref.theme || '—'} />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Occasions</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(ref.occasions && ref.occasions.length > 0 ? ref.occasions : (ref.occasion ? [ref.occasion] : [])).map(o => (
+                  <span key={o} className="px-2 py-0.5 bg-pink-50 text-pink-700 text-xs rounded-full font-semibold">
+                    {o.replace(/_/g, ' ')}
+                  </span>
+                ))}
+                {((ref.occasions || []).length === 0 && !ref.occasion) && <span className="text-gray-400 text-xs">—</span>}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Setup Types</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(ref.setup_types && ref.setup_types.length > 0 ? ref.setup_types : (ref.setup_type ? [ref.setup_type] : [])).map(s => (
+                  <span key={s} className="px-2 py-0.5 bg-purple-50 text-purple-700 text-xs rounded-full font-semibold">
+                    {s}
+                  </span>
+                ))}
+                {((ref.setup_types || []).length === 0 && !ref.setup_type) && <span className="text-gray-400 text-xs">—</span>}
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <MetaInput label="Base Price (Rs)" type="number" value={meta.base_price} onChange={v => setMeta(m => ({ ...m, base_price: v }))} />
-            <MetaInput label="Occasion" value={meta.occasion} onChange={v => setMeta(m => ({ ...m, occasion: v }))} />
-            <MetaInput label="Theme" value={meta.theme} onChange={v => setMeta(m => ({ ...m, theme: v }))} />
-            <MetaInput label="Setup Type" value={meta.setup_type} onChange={v => setMeta(m => ({ ...m, setup_type: v }))} />
-            <div className="col-span-2 md:col-span-4">
-              <MetaInput label="Tags (comma separated)" value={meta.ai_tags} onChange={v => setMeta(m => ({ ...m, ai_tags: v }))} />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <MetaInput label="Base Price (Rs)" type="number" value={meta.base_price} onChange={v => setMeta(m => ({ ...m, base_price: v }))} />
+              <MetaInput label="Theme" value={meta.theme} onChange={v => setMeta(m => ({ ...m, theme: v }))} />
             </div>
+            <DetailChipGroup
+              label="Occasions"
+              options={[
+                ['birthday','birthday'], ['anniversary','anniversary'], ['wedding','wedding'],
+                ['baby_shower','baby shower'], ['engagement','engagement'], ['corporate','corporate'],
+                ['festival','festival'], ['housewarming','housewarming'], ['new_year','new year'],
+                ['store_opening','store opening'], ['party','party'], ['dinner','dinner'],
+              ]}
+              value={meta.occasions || []}
+              onChange={(arr) => setMeta(m => ({ ...m, occasions: arr }))}
+            />
+            <DetailChipGroup
+              label="Setup Types"
+              options={[
+                ['indoor','indoor'], ['outdoor','outdoor'], ['private','private'],
+                ['venue','venue'], ['corporate','corporate'], ['store','store'],
+              ]}
+              value={meta.setup_types || []}
+              onChange={(arr) => setMeta(m => ({ ...m, setup_types: arr }))}
+            />
+            <MetaInput label="Tags (comma separated)" value={meta.ai_tags} onChange={v => setMeta(m => ({ ...m, ai_tags: v }))} />
           </div>
         )}
 
@@ -596,6 +636,38 @@ function Row({ label, value, dark, accent, sub, muted }) {
     <div className="flex justify-between items-center">
       <span className={labelClass}>{label}</span>
       <span className={`font-semibold ${accentClass || (sub || muted ? (dark ? 'text-gray-300' : 'text-gray-700') : (dark ? 'text-white' : 'text-gray-900'))}`}>{value}</span>
+    </div>
+  )
+}
+
+function DetailChipGroup({ label, options, value = [], onChange }) {
+  const toggle = (key) => {
+    const set = new Set(value)
+    if (set.has(key)) set.delete(key); else set.add(key)
+    onChange([...set])
+  }
+  return (
+    <div>
+      <label className="block text-xs text-gray-600 font-semibold mb-2">{label}</label>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(([key, displayLabel]) => {
+          const active = value.includes(key)
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => toggle(key)}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition ${
+                active
+                  ? 'bg-pink-500 border-pink-500 text-white'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+              }`}
+            >
+              {active ? '✓ ' : ''}{displayLabel}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }

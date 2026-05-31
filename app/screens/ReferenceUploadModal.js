@@ -23,11 +23,39 @@ function previewParse(filename) {
   }
 
   const lower = base.toLowerCase()
-  const occasions = ['birthday','anniversary','wedding','baby shower','engagement','corporate','festival','housewarming','new year','store opening','party']
-  const occasion = occasions.find(o => lower.includes(o)) || null
+  const OCC_MAP = {
+    birthday: ['birthday','bday'],
+    anniversary: ['anniversary'],
+    wedding: ['wedding','marriage','shaadi'],
+    baby_shower: ['baby shower','godhbharai'],
+    engagement: ['engagement','sagai','proposal'],
+    corporate: ['corporate','office','company'],
+    festival: ['festival','diwali','holi','christmas','eid'],
+    housewarming: ['housewarming','house warming','griha pravesh'],
+    new_year: ['new year','newyear','nye'],
+    store_opening: ['store opening','inauguration','grand opening','shop opening'],
+    party: ['party','celebration'],
+    dinner: ['dinner','romantic dinner'],
+  }
+  const detectedOccasions = []
+  for (const [key, variants] of Object.entries(OCC_MAP)) {
+    if (variants.some(v => lower.includes(v))) detectedOccasions.push(key)
+  }
+  const occasion = detectedOccasions[0] || null
 
-  const setups = ['indoor','outdoor','private','venue','corporate','store']
-  const setup = setups.find(s => lower.includes(s)) || null
+  const SETUP_MAP = {
+    indoor:    ['indoor','inside','hall','living room','bedroom'],
+    outdoor:   ['outdoor','outside','garden','lawn','terrace','rooftop'],
+    private:   ['private','home','apartment','flat'],
+    venue:     ['venue','hotel','banquet','restaurant'],
+    corporate: ['office','corporate','workplace'],
+    store:     ['store','shop','showroom'],
+  }
+  const detectedSetups = []
+  for (const [key, variants] of Object.entries(SETUP_MAP)) {
+    if (variants.some(v => lower.includes(v))) detectedSetups.push(key)
+  }
+  const setup = detectedSetups[0] || null
 
   const colors = ['pink','gold','silver','rose gold','black','white','red','blue','pastel','chrome','champagne']
   const found = colors.filter(c => lower.includes(c))
@@ -63,7 +91,9 @@ function previewParse(filename) {
   return {
     price,
     occasion,
+    occasions: detectedOccasions,
     setup_type: setup,
+    setup_types: detectedSetups,
     theme: pieces.join(' — ').trim(),
   }
 }
@@ -73,7 +103,7 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [parsed, setParsed] = useState({})
-  const [overrides, setOverrides] = useState({ base_price: '', occasion: '', theme: '', setup_type: '' })
+  const [overrides, setOverrides] = useState({ base_price: '', occasions: [], theme: '', setup_types: [] })
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef(null)
@@ -96,9 +126,9 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
     setParsed(p)
     setOverrides({
       base_price: p.price || '',
-      occasion: p.occasion || '',
+      occasions: p.occasions || (p.occasion ? [p.occasion] : []),
       theme: p.theme || '',
-      setup_type: p.setup_type || '',
+      setup_types: p.setup_types || (p.setup_type ? [p.setup_type] : []),
     })
   }
 
@@ -120,9 +150,10 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
     fd.append('file', file)
     fd.append('filename', file.name)
     if (overrides.base_price) fd.append('base_price', String(overrides.base_price))
-    if (overrides.occasion)   fd.append('occasion', overrides.occasion)
     if (overrides.theme)      fd.append('theme', overrides.theme)
-    if (overrides.setup_type) fd.append('setup_type', overrides.setup_type)
+    // Multi-value fields — send as comma-separated string (backend accepts either)
+    if (overrides.occasions?.length)   fd.append('occasions',   overrides.occasions.join(','))
+    if (overrides.setup_types?.length) fd.append('setup_types', overrides.setup_types.join(','))
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null
     const apiBase = process.env.NEXT_PUBLIC_API_URL || ''
@@ -185,7 +216,7 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
               <div className="relative rounded-xl overflow-hidden bg-gray-100">
                 <img src={preview} alt="preview" className="w-full max-h-80 object-contain" />
                 <button
-                  onClick={() => { setFile(null); setPreview(null); setParsed({}); setOverrides({ base_price: '', occasion: '', theme: '', setup_type: '' }) }}
+                  onClick={() => { setFile(null); setPreview(null); setParsed({}); setOverrides({ base_price: '', occasions: [], theme: '', setup_types: [] }) }}
                   className="absolute top-2 right-2 px-2 py-1 bg-black/60 hover:bg-black/80 text-white text-xs rounded"
                 >
                   Change
@@ -201,13 +232,29 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
               <p className="text-xs font-semibold text-pink-700 uppercase mb-2 tracking-wide">Auto-detected from filename</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div><span className="text-gray-500">Price:</span> <span className="font-semibold text-gray-900">{parsed.price ? `Rs ${parsed.price.toLocaleString()}` : '—'}</span></div>
-                <div><span className="text-gray-500">Occasion:</span> <span className="font-semibold text-gray-900">{parsed.occasion || '—'}</span></div>
-                <div><span className="text-gray-500">Setup:</span> <span className="font-semibold text-gray-900">{parsed.setup_type || '—'}</span></div>
                 <div>
                   <span className="text-gray-500">Bracket:</span>{' '}
                   <span className="font-semibold text-pink-700">
                     {overrides.base_price ? bracketForPrice(overrides.base_price)?.label : '—'}
                   </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-gray-500">Occasions:</span>{' '}
+                  {parsed.occasions?.length > 0
+                    ? parsed.occasions.map(o => (
+                        <span key={o} className="inline-block mr-1 px-1.5 py-0.5 bg-pink-100 text-pink-800 rounded text-xs font-semibold">{o.replace(/_/g, ' ')}</span>
+                      ))
+                    : <span className="font-semibold text-gray-900">—</span>
+                  }
+                </div>
+                <div className="col-span-2">
+                  <span className="text-gray-500">Setup Types:</span>{' '}
+                  {parsed.setup_types?.length > 0
+                    ? parsed.setup_types.map(s => (
+                        <span key={s} className="inline-block mr-1 px-1.5 py-0.5 bg-pink-100 text-pink-800 rounded text-xs font-semibold">{s}</span>
+                      ))
+                    : <span className="font-semibold text-gray-900">—</span>
+                  }
                 </div>
                 <div className="col-span-2"><span className="text-gray-500">Theme:</span> <span className="font-semibold text-gray-900">{parsed.theme || '—'}</span></div>
               </div>
@@ -244,28 +291,6 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Occasion</label>
-                  <select
-                    value={overrides.occasion}
-                    onChange={e => setOverrides(o => ({ ...o, occasion: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-                  >
-                    <option value="">— pick —</option>
-                    <option value="birthday">birthday</option>
-                    <option value="anniversary">anniversary</option>
-                    <option value="wedding">wedding</option>
-                    <option value="baby_shower">baby shower</option>
-                    <option value="engagement">engagement</option>
-                    <option value="corporate">corporate</option>
-                    <option value="festival">festival</option>
-                    <option value="housewarming">housewarming</option>
-                    <option value="new_year">new year</option>
-                    <option value="store_opening">store opening</option>
-                    <option value="party">party</option>
-                    <option value="dinner">dinner</option>
-                  </select>
-                </div>
-                <div>
                   <label className="block text-xs text-gray-600 mb-1">Theme</label>
                   <input
                     type="text"
@@ -275,23 +300,29 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
                     placeholder="e.g., pink and gold"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Setup Type</label>
-                  <select
-                    value={overrides.setup_type}
-                    onChange={e => setOverrides(o => ({ ...o, setup_type: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-                  >
-                    <option value="">— pick —</option>
-                    <option value="indoor">indoor</option>
-                    <option value="outdoor">outdoor</option>
-                    <option value="private">private</option>
-                    <option value="venue">venue</option>
-                    <option value="corporate">corporate</option>
-                    <option value="store">store</option>
-                  </select>
-                </div>
               </div>
+
+              <ChipGroup
+                label="Occasions (toggle any that apply)"
+                options={[
+                  ['birthday','birthday'], ['anniversary','anniversary'], ['wedding','wedding'],
+                  ['baby_shower','baby shower'], ['engagement','engagement'], ['corporate','corporate'],
+                  ['festival','festival'], ['housewarming','housewarming'], ['new_year','new year'],
+                  ['store_opening','store opening'], ['party','party'], ['dinner','dinner'],
+                ]}
+                value={overrides.occasions}
+                onChange={(arr) => setOverrides(o => ({ ...o, occasions: arr }))}
+              />
+
+              <ChipGroup
+                label="Setup Types (toggle any that apply)"
+                options={[
+                  ['indoor','indoor'], ['outdoor','outdoor'], ['private','private'],
+                  ['venue','venue'], ['corporate','corporate'], ['store','store'],
+                ]}
+                value={overrides.setup_types}
+                onChange={(arr) => setOverrides(o => ({ ...o, setup_types: arr }))}
+              />
             </div>
           )}
         </div>
@@ -306,6 +337,38 @@ export default function ReferenceUploadModal({ onClose, onUploaded }) {
             {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</> : <><Upload className="w-4 h-4" /> Upload & Analyze</>}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ChipGroup({ label, options, value = [], onChange }) {
+  const toggle = (key) => {
+    const set = new Set(value)
+    if (set.has(key)) set.delete(key); else set.add(key)
+    onChange([...set])
+  }
+  return (
+    <div>
+      <label className="block text-xs text-gray-600 mb-2">{label}</label>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map(([key, label]) => {
+          const active = value.includes(key)
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => toggle(key)}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition ${
+                active
+                  ? 'bg-pink-500 border-pink-500 text-white'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+              }`}
+            >
+              {active ? '✓ ' : ''}{label}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
