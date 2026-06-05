@@ -46,7 +46,9 @@ export default function AdminOrders() {
     } else { showToast(data.error, 'error') }
   }
 
-  const filtered = orders.filter(o => {
+  // Hide unpaid draft orders (customer cancelled Razorpay before paying)
+  const realOrders = orders.filter(o => o.payment_status !== 'pending')
+  const filtered = realOrders.filter(o => {
     const matchesFilter = filter === 'all' || o.delivery_status === filter
     const matchesSearch = !search ||
       o.id.includes(search) ||
@@ -96,7 +98,7 @@ export default function AdminOrders() {
       {/* Summary chips */}
       <div className="flex gap-2 flex-wrap">
         {['all', ...STATUSES].map(s => {
-          const count = s === 'all' ? orders.length : orders.filter(o => o.delivery_status === s).length
+          const count = s === 'all' ? realOrders.length : realOrders.filter(o => o.delivery_status === s).length
           if (s !== 'all' && count === 0) return null
           return (
             <button key={s} onClick={() => setFilter(s)}

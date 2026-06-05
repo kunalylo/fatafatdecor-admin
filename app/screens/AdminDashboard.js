@@ -52,13 +52,15 @@ export default function AdminDashboard() {
     showToast('Dashboard refreshed', 'success')
   }
 
-  const totalRevenue    = orders.reduce((s, o) => s + (o.payment_amount || 0), 0)
-  const pendingOrders   = orders.filter(o => o.delivery_status === 'pending').length
-  const activeOrders    = orders.filter(o => ['assigned', 'en_route', 'arrived', 'decorating'].includes(o.delivery_status)).length
-  const deliveredOrders = orders.filter(o => o.delivery_status === 'delivered' || o.delivery_status === 'completed').length
-  const cancelledOrders = orders.filter(o => o.delivery_status === 'cancelled').length
+  // Exclude unpaid draft orders (customer cancelled Razorpay before paying) — not real orders
+  const realOrders      = orders.filter(o => o.payment_status !== 'pending')
+  const totalRevenue    = realOrders.reduce((s, o) => s + (o.payment_amount || 0), 0)
+  const pendingOrders   = realOrders.filter(o => o.delivery_status === 'pending').length
+  const activeOrders    = realOrders.filter(o => ['assigned', 'en_route', 'arrived', 'decorating'].includes(o.delivery_status)).length
+  const deliveredOrders = realOrders.filter(o => o.delivery_status === 'delivered' || o.delivery_status === 'completed').length
+  const cancelledOrders = realOrders.filter(o => o.delivery_status === 'cancelled').length
   const activeTeam      = deliveryPersons.filter(dp => dp.is_active).length
-  const recentOrders    = [...orders].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 10)
+  const recentOrders    = [...realOrders].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 10)
 
   return (
     <div className="p-6 space-y-6">
@@ -81,8 +83,8 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard icon={ShoppingBag} label="Total Orders" value={orders.length} sub={`${pendingOrders} pending`} color="bg-pink-500" />
-        <StatCard icon={TrendingUp} label="Revenue Collected" value={`₹${totalRevenue.toLocaleString('en-IN')}`} sub={`${orders.filter(o => o.payment_status === 'partial').length} partial payments`} color="bg-emerald-500" />
+        <StatCard icon={ShoppingBag} label="Total Orders" value={realOrders.length} sub={`${pendingOrders} pending`} color="bg-pink-500" />
+        <StatCard icon={TrendingUp} label="Revenue Collected" value={`₹${totalRevenue.toLocaleString('en-IN')}`} sub={`${realOrders.filter(o => o.payment_status === 'partial').length} partial payments`} color="bg-emerald-500" />
         <StatCard icon={Users} label="Team Members" value={deliveryPersons.length} sub={`${activeTeam} active`} color="bg-blue-500" />
         <StatCard icon={Box} label="Inventory" value={items.length.toLocaleString()} sub={`${referencesCount} live references`} color="bg-violet-500" />
       </div>
@@ -115,7 +117,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-bold text-gray-800 text-base">Recent Orders</h3>
-          <span className="text-xs text-gray-400">{orders.length} total</span>
+          <span className="text-xs text-gray-400">{realOrders.length} total</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
