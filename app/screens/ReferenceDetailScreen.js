@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowLeft, CheckCircle, XCircle, RefreshCw, Loader2, Trash2,
-  Edit2, Save, AlertTriangle, Eye, EyeOff, Plus
+  Edit2, Save, AlertTriangle, Eye, EyeOff, Plus, Bot, Zap, ArrowUp, Check
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
@@ -204,14 +204,14 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
       </div>
 
       {/* Image */}
-      <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+      <div className="glass-floating rounded-2xl overflow-hidden">
         <img src={ref.image_url} alt="" className="w-full max-h-[500px] object-contain bg-gray-50" />
       </div>
 
       {/* Metadata */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-200">
+      <div className="glass-floating rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-gray-900">Parsed Metadata</h3>
+          <h3 className="font-display text-xl text-gray-900">Parsed Metadata</h3>
           {!editingMeta ? (
             <button onClick={() => setEditingMeta(true)} className="flex items-center gap-1 text-pink-600 hover:text-pink-700 text-sm font-semibold">
               <Edit2 className="w-4 h-4" /> Edit
@@ -219,7 +219,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
           ) : (
             <div className="flex gap-2">
               <button onClick={() => { setEditingMeta(false); setMeta({ base_price: ref.base_price, occasions: ref.occasions && ref.occasions.length ? ref.occasions : (ref.occasion ? [ref.occasion] : []), setup_types: ref.setup_types && ref.setup_types.length ? ref.setup_types : (ref.setup_type ? [ref.setup_type] : []), theme: ref.theme, ai_tags: (ref.ai_tags || []).join(', ') }) }} className="text-sm text-gray-600">Cancel</button>
-              <button onClick={handleSaveMeta} disabled={saving} className="flex items-center gap-1 px-3 py-1 bg-pink-500 hover:bg-pink-600 text-white text-sm rounded">
+              <button onClick={handleSaveMeta} disabled={saving} className="flex items-center gap-1 px-3 py-1 btn-primary-luxury text-white text-sm rounded">
                 <Save className="w-3 h-3" /> Save
               </button>
             </div>
@@ -337,15 +337,15 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
 
       {/* Detected Items */}
       {items.length > 0 && (
-        <div className="bg-white rounded-2xl p-5 border border-gray-200">
+        <div className="glass-floating rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-bold text-gray-900">Detected Items ({items.length})</h3>
+              <h3 className="font-display text-xl text-gray-900">Detected Items ({items.length})</h3>
               {/* Item source legend */}
               <div className="flex items-center gap-1 text-[10px]">
-                <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">🤖 AI</span>
+                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200"><Bot className="w-3 h-3" /> AI</span>
                 <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">+ Manual</span>
-                <span className="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">⚡ Auto-SKU</span>
+                <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200"><Zap className="w-3 h-3" /> Auto-SKU</span>
               </div>
             </div>
             <div className="flex gap-2 items-center">
@@ -365,7 +365,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
               ) : (
                 <>
                   <button onClick={() => { setEditingItems(false); setItems(ref.detected_items || []) }} className="text-sm text-gray-600">Cancel</button>
-                  <button onClick={handleSaveItems} disabled={saving} className="flex items-center gap-1 px-3 py-1 bg-pink-500 hover:bg-pink-600 text-white text-sm rounded">
+                  <button onClick={handleSaveItems} disabled={saving} className="flex items-center gap-1 px-3 py-1 btn-primary-luxury text-white text-sm rounded">
                     <Save className="w-3 h-3" /> Save Items
                   </button>
                 </>
@@ -397,15 +397,15 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
                         {it.confidence === 'manual' ? (
                           <span className="text-[9px] uppercase font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">+ Manual</span>
                         ) : it.confidence === 'auto_created' ? (
-                          <span className="text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">⚡ Auto-SKU</span>
+                          <span className="inline-flex items-center gap-0.5 text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200"><Zap className="w-2.5 h-2.5" /> Auto-SKU</span>
                         ) : (
-                          <span className="text-[9px] uppercase font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">🤖 AI</span>
+                          <span className="inline-flex items-center gap-0.5 text-[9px] uppercase font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200"><Bot className="w-2.5 h-2.5" /> AI</span>
                         )}
                       </p>
                       {it.matched_sku_code ? (
                         <p className="text-[10px] text-gray-500 font-mono">{it.matched_sku_code}</p>
                       ) : (
-                        <p className="text-[10px] text-red-500 font-semibold">⚠ UNMATCHED</p>
+                        <p className="inline-flex items-center gap-0.5 text-[10px] text-red-500 font-semibold"><AlertTriangle className="w-2.5 h-2.5" /> UNMATCHED</p>
                       )}
                     </td>
                     <td className="text-center px-2">
@@ -465,15 +465,15 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
               <h4 className="font-bold text-gray-900 text-sm">
                 {itemsGap > 0.05 * basePrice
                   ? `Items below decoration price — Rs ${itemsGap.toFixed(0)} short`
-                  : 'Items match decoration price ✓'}
+                  : 'Items match decoration price'}
               </h4>
             </div>
             {itemsGap > 0.05 * basePrice && totalItemsPrice > 0 && (
               <button
                 onClick={handleScaleToBase}
-                className="text-xs px-3 py-1 bg-white border border-amber-400 hover:bg-amber-100 text-amber-800 rounded font-semibold"
+                className="inline-flex items-center gap-1 text-xs px-3 py-1 bg-white border border-amber-400 hover:bg-amber-100 text-amber-800 rounded font-semibold"
               >
-                ↑ Scale qty ×{(basePrice / totalItemsPrice).toFixed(2)} to match
+                <ArrowUp className="w-3 h-3" /> Scale qty &times;{(basePrice / totalItemsPrice).toFixed(2)} to match
               </button>
             )}
           </div>
@@ -490,7 +490,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
           </div>
           {itemsGap > 0.05 * basePrice && (
             <p className="text-[11px] text-gray-600 mt-2">
-              Add more items via <strong>Edit → + Add Item</strong>, or click <strong>Scale qty</strong> above
+              Add more items via <strong>Edit &rarr; + Add Item</strong>, or click <strong>Scale qty</strong> above
               to bump existing quantities proportionally.
             </p>
           )}
@@ -498,8 +498,8 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
       )}
 
       {/* Customer Pricing Breakdown */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-200">
-        <h3 className="font-bold text-gray-900 mb-3">Customer View — What Customer Pays</h3>
+      <div className="glass-floating rounded-2xl p-5">
+        <h3 className="font-display text-xl text-gray-900 mb-3">Customer View — What <span className="italic iridescent-text">Customer</span> Pays</h3>
         <div className="space-y-2 text-sm">
           <Row label="Decoration & Material (items at 2x)" value={`Rs ${breakdown.decoration_total.toLocaleString()}`} />
           <Row label="Setup & Transportation" value={`Rs ${breakdown.setup_transport.toLocaleString()}`} sub />
@@ -515,32 +515,31 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
           />
         </div>
         <p className="text-[10px] text-gray-400 mt-3">
-          Setup &amp; transport tiered: ≤10K→Rs 625 • 10K-20K→Rs 1,025 • &gt;20K→Rs 1,325
+          Setup &amp; transport tiered: &le;10K&rarr;Rs 625 &bull; 10K-20K&rarr;Rs 1,025 &bull; &gt;20K&rarr;Rs 1,325
         </p>
       </div>
 
       {/* Admin Internal — margins */}
-      <div className="bg-gray-900 rounded-2xl p-5 text-white">
-        <h3 className="font-bold mb-3">Admin Internal — Margins</h3>
+      <div className="glass-floating rounded-2xl p-5">
+        <h3 className="font-display text-xl text-gray-900 mb-3">Admin Internal — <span className="italic iridescent-text">Margins</span></h3>
         <div className="space-y-2 text-sm">
-          <Row label="Decoration Value (selling, 2x)"  value={`Rs ${margin.decoration_total.toLocaleString()}`} dark />
-          <Row label="Item Procurement Cost (1x)"       value={`Rs ${margin.items_cost.toLocaleString()}`}      dark />
-          <div className="border-t border-gray-700 my-2"></div>
+          <Row label="Decoration Value (selling, 2x)"  value={`Rs ${margin.decoration_total.toLocaleString()}`} />
+          <Row label="Item Procurement Cost (1x)"       value={`Rs ${margin.items_cost.toLocaleString()}`} />
+          <div className="border-t border-gray-200 my-2"></div>
           <Row
             label="Material Margin"
             value={`Rs ${margin.operating_margin.toLocaleString()} (${margin.margin_percent}%)`}
-            dark
             accent={margin.margin_percent >= 60 ? 'green' : margin.margin_percent >= 40 ? 'amber' : 'red'}
           />
-          <div className="border-t border-gray-700 my-2"></div>
-          <Row label="Setup Fee Collected"     value={`Rs ${breakdown.setup_transport}`} dark sub />
-          <Row label="Platform + Convenience"  value={`Rs ${breakdown.platform_fee + breakdown.convenience_fee}`} dark sub />
-          <Row label="GST Collected (pass-through)" value={`Rs ${breakdown.gst.toLocaleString()}`} dark sub />
+          <div className="border-t border-gray-200 my-2"></div>
+          <Row label="Setup Fee Collected"     value={`Rs ${breakdown.setup_transport}`} sub />
+          <Row label="Platform + Convenience"  value={`Rs ${breakdown.platform_fee + breakdown.convenience_fee}`} sub />
+          <Row label="GST Collected (pass-through)" value={`Rs ${breakdown.gst.toLocaleString()}`} sub />
         </div>
       </div>
 
       {/* Stats */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-200 grid grid-cols-3 gap-4 text-center">
+      <div className="glass-floating rounded-2xl p-5 grid grid-cols-3 gap-4 text-center">
         <div>
           <p className="text-xs text-gray-500">Views</p>
           <p className="text-xl font-bold text-gray-900">{ref.view_count || 0}</p>
@@ -556,7 +555,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
       </div>
 
       {/* Action Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-200 flex flex-wrap gap-2 justify-end">
+      <div className="glass-overlay rounded-2xl p-4 flex flex-wrap gap-2 justify-end">
         <button onClick={handleDelete} className="flex items-center gap-1 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-semibold">
           <Trash2 className="w-4 h-4" /> Delete
         </button>
@@ -573,7 +572,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
               <XCircle className="w-4 h-4" /> Reject
             </button>
             <button onClick={handleApprove} disabled={saving} className="flex items-center gap-1 px-5 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-bold">
-              <CheckCircle className="w-4 h-4" /> Approve & Publish
+              <CheckCircle className="w-4 h-4" /> Approve &amp; Publish
             </button>
           </>
         )}
@@ -616,7 +615,7 @@ function MetaInput({ label, value, onChange, type = 'text' }) {
         type={type}
         value={value ?? ''}
         onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+        className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
       />
     </div>
   )
@@ -657,13 +656,13 @@ function DetailChipGroup({ label, options, value = [], onChange }) {
               key={key}
               type="button"
               onClick={() => toggle(key)}
-              className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition ${
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition ${
                 active
-                  ? 'bg-pink-500 border-pink-500 text-white'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                  ? 'btn-primary-luxury border-transparent text-white'
+                  : 'bg-white/70 border-white/80 text-gray-700 hover:border-pink-300'
               }`}
             >
-              {active ? '✓ ' : ''}{displayLabel}
+              {active && <Check className="w-3 h-3" />}{displayLabel}
             </button>
           )
         })}

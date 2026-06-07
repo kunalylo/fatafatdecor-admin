@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import {
   Sparkles, Camera, Truck, Package, Plus, Trash2,
   Loader2, CheckCircle2, Edit3, Image, Clock, Lock, Unlock, Calendar,
-  AlertTriangle, X
+  AlertTriangle, X, Star
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -106,14 +106,14 @@ function SmartKitCreator() {
   return (
     <div className="space-y-4">
       {/* Upload Section */}
-      <Card className="border-2 border-pink-200 bg-pink-50/30">
+      <Card className="glass-floating rounded-2xl">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-5 h-5 text-pink-500" />
-            <h3 className="font-bold text-sm text-gray-700">AI Decoration Scanner</h3>
+            <h3 className="font-display text-xl text-gray-900">AI Decoration <span className="italic iridescent-text">Scanner</span></h3>
           </div>
-          <p className="text-xs text-gray-400">Upload a photo. AI detects all items, counts units, estimates costs & generates a kit name.</p>
-          <Input placeholder="Name (optional - AI will auto-name)" value={scanName} onChange={e => setScanName(e.target.value)} className="bg-white border-gray-200 h-10 rounded-lg" />
+          <p className="text-xs text-gray-400">Upload a photo. AI detects all items, counts units, estimates costs &amp; generates a kit name.</p>
+          <Input placeholder="Name (optional - AI will auto-name)" value={scanName} onChange={e => setScanName(e.target.value)} className="bg-white/70 border-white/80 h-10 rounded-lg" />
           {scanImage ? (
             <div className="relative">
               <img src={scanImage} alt="" className="w-full h-48 object-cover rounded-xl border border-pink-200" />
@@ -121,14 +121,14 @@ function SmartKitCreator() {
                 className="absolute top-2 right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg"><Trash2 className="w-4 h-4 text-white" /></button>
             </div>
           ) : (
-            <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-pink-300 rounded-xl cursor-pointer hover:border-pink-500 bg-white">
+            <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-pink-300 rounded-xl cursor-pointer hover:border-pink-500 bg-white/70">
               <Camera className="w-8 h-8 text-pink-300 mb-2" />
               <p className="text-sm text-pink-400 font-medium">Upload Decoration Photo</p>
               <input type="file" accept="image/*" onChange={handleScanUpload} className="hidden" />
             </label>
           )}
           <Button onClick={analyzeImage} disabled={!scanImage || scanning}
-            className="w-full h-12 gradient-pink border-0 text-white font-bold rounded-xl shadow-pink">
+            className="w-full h-12 btn-primary-luxury border-0 text-white font-bold rounded-xl">
             {scanning ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Analyzing (10-20 sec)...</> : <><Sparkles className="w-4 h-4 mr-2" />Analyze with AI</>}
           </Button>
         </CardContent>
@@ -138,39 +138,39 @@ function SmartKitCreator() {
       {a && a.success && (
         <>
           {/* Summary Card */}
-          <Card className="border-2 border-green-300 bg-green-50/50">
+          <Card className="glass-floating rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <h3 className="font-bold text-green-700">Analysis Report</h3>
+                <h3 className="font-display text-xl text-gray-900">Analysis Report</h3>
               </div>
               <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="bg-white rounded-lg p-2.5 border border-green-100 col-span-2">
+                <div className="bg-white/70 rounded-lg p-2.5 border border-white/80 col-span-2">
                   <p className="text-[10px] text-gray-400 uppercase">Kit Name (editable)</p>
                   <Input value={scanName || a.decoration_type} onChange={e => setScanName(e.target.value)}
                     className="bg-transparent border-0 h-7 p-0 text-sm font-bold text-gray-700 focus-visible:ring-0" />
                 </div>
-                <div className="bg-white rounded-lg p-2.5 border border-green-100">
+                <div className="bg-white/70 rounded-lg p-2.5 border border-white/80">
                   <p className="text-[10px] text-gray-400 uppercase">Color Theme</p>
                   <p className="text-sm font-semibold text-gray-700">{a.color_theme}</p>
                 </div>
-                <div className="bg-white rounded-lg p-2.5 border border-green-100">
+                <div className="bg-white/70 rounded-lg p-2.5 border border-white/80">
                   <p className="text-[10px] text-gray-400 uppercase">Best For</p>
                   <p className="text-sm font-semibold capitalize text-gray-700">{a.occasion_suggestion}</p>
                 </div>
-                <div className="bg-white rounded-lg p-2.5 border border-green-100">
+                <div className="bg-white/70 rounded-lg p-2.5 border border-white/80">
                   <p className="text-[10px] text-gray-400 uppercase">Setup Time</p>
                   <p className="text-sm font-semibold text-gray-700">{a.setup_time_minutes} minutes</p>
                 </div>
               </div>
-              {a.notes && <p className="text-xs text-gray-500 italic bg-white rounded-lg p-2 border border-green-100">{a.notes}</p>}
+              {a.notes && <p className="text-xs text-gray-500 italic bg-white/70 rounded-lg p-2 border border-white/80">{a.notes}</p>}
             </CardContent>
           </Card>
 
           {/* Itemized Report - EDITABLE */}
-          <Card className="border border-gray-200">
+          <Card className="glass-floating rounded-2xl">
             <CardContent className="p-4">
-              <h3 className="font-bold text-sm text-gray-700 mb-1">Detected Items ({(a.items || []).length})</h3>
+              <h3 className="font-display text-xl text-gray-900 mb-1">Detected Items ({(a.items || []).length})</h3>
               <p className="text-[10px] text-gray-400 mb-3">Edit names, quantities & prices below</p>
               <div className="space-y-2">
                 {(a.items || []).map((item, i) => (
@@ -255,9 +255,9 @@ function SmartKitCreator() {
           </Card>
 
           {/* Cost Summary - EDITABLE */}
-          <Card className="border-2 border-pink-200 bg-pink-50/30">
+          <Card className="glass-floating rounded-2xl">
             <CardContent className="p-4">
-              <h3 className="font-bold text-sm text-gray-700 mb-2">Cost Summary (editable)</h3>
+              <h3 className="font-display text-xl text-gray-900 mb-2">Cost Summary (editable)</h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500">Items Cost</span>
@@ -292,8 +292,8 @@ function SmartKitCreator() {
 
           {/* Action Buttons */}
           <div className="space-y-2">
-            <Button onClick={saveAsKit} className="w-full h-12 gradient-pink border-0 text-white font-bold rounded-xl shadow-pink">
-              <Plus className="w-4 h-4 mr-2" /> Save as Kit: "{scanName || a.decoration_type}"
+            <Button onClick={saveAsKit} className="w-full h-12 btn-primary-luxury border-0 text-white font-bold rounded-xl">
+              <Plus className="w-4 h-4 mr-2" /> Save as Kit: &quot;{scanName || a.decoration_type}&quot;
             </Button>
             <Button onClick={addItemsToStock} variant="outline" className="w-full h-11 border-green-300 text-green-600 font-semibold rounded-xl hover:bg-green-50">
               <Package className="w-4 h-4 mr-2" /> Add All Items to Inventory Stock
@@ -308,7 +308,7 @@ function SmartKitCreator() {
       {/* Saved References */}
       {savedRefs.length > 0 && (
         <div>
-          <h3 className="font-bold text-sm text-gray-700 mb-2">Saved References ({savedRefs.length})</h3>
+          <h3 className="font-display text-xl text-gray-900 mb-2">Saved References ({savedRefs.length})</h3>
           <div className="grid grid-cols-3 gap-2">
             {savedRefs.map(ref => (
               <div key={ref.id} className="relative">
@@ -367,11 +367,11 @@ function SlotsManager() {
 
   return (
     <div className="space-y-4">
-      <Card className="border border-pink-100">
+      <Card className="glass-floating rounded-2xl">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-5 h-5 text-pink-500" />
-            <h3 className="font-bold text-sm text-gray-700">Manage Time Slots</h3>
+            <h3 className="font-display text-xl text-gray-900">Manage Time <span className="italic iridescent-text">Slots</span></h3>
           </div>
           <p className="text-xs text-gray-400 mb-3">Block a time slot so customers cannot book it. Useful when all decorators are busy or unavailable.</p>
           <div className="flex gap-2 overflow-x-auto pb-2">
@@ -379,7 +379,7 @@ function SlotsManager() {
               const dt = new Date(d)
               return (
                 <button key={d} onClick={() => setSelectedDate(d)}
-                  className={`shrink-0 w-16 py-2 rounded-xl text-center transition-all ${selectedDate === d ? 'gradient-pink text-white shadow-pink' : 'bg-gray-50 border border-gray-200'}`}>
+                  className={`shrink-0 w-16 py-2 rounded-xl text-center transition-all ${selectedDate === d ? 'btn-primary-luxury text-white' : 'bg-white/70 border border-white/80'}`}>
                   <p className="text-[10px] uppercase">{dt.toLocaleDateString('en', { weekday: 'short' })}</p>
                   <p className="text-lg font-bold">{dt.getDate()}</p>
                   <p className="text-[10px]">{dt.toLocaleDateString('en', { month: 'short' })}</p>
@@ -411,7 +411,7 @@ function SlotsManager() {
                 </div>
                 <p className="text-[10px] text-gray-500">{s.time_label}</p>
                 <p className={`text-[10px] font-semibold mt-0.5 ${isBlocked ? 'text-red-500' : s.available_count === 0 ? 'text-orange-500' : 'text-green-600'}`}>
-                  {isBlocked ? '🔒 Packed (by you)' : s.available_count === 0 ? '⚠️ Fully booked' : `✅ ${s.available_count} free`}
+                  {isBlocked ? 'Packed (by you)' : s.available_count === 0 ? 'Fully booked' : `${s.available_count} free`}
                 </p>
                 <p className="text-[9px] text-gray-400 mt-1">{isBlocked ? 'Tap to open' : 'Tap to block'}</p>
               </button>
@@ -574,29 +574,29 @@ export default function AdminScreen() {
         {tab === 'kits' && (
           <div className="space-y-3">
             {/* Kit Builder Form */}
-            <Card className="border border-pink-100">
+            <Card className="glass-floating rounded-2xl">
               <CardContent className="p-4 space-y-3">
-                <h3 className="font-bold text-sm text-gray-700">Create Decoration Kit</h3>
-                <Input placeholder="Kit Name (e.g., Birthday Pastel Balloon Setup)" value={newKit.name} onChange={e => setNewKit(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <h3 className="font-display text-xl text-gray-900">Create Decoration <span className="italic iridescent-text">Kit</span></h3>
+                <Input placeholder="Kit Name (e.g., Birthday Pastel Balloon Setup)" value={newKit.name} onChange={e => setNewKit(p => ({ ...p, name: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 <textarea placeholder="Description (what this kit looks like, style, theme...)" value={newKit.description} onChange={e => setNewKit(p => ({ ...p, description: e.target.value }))}
-                  className="w-full h-16 bg-gray-50 rounded-lg p-3 text-sm border border-gray-200 outline-none resize-none" />
+                  className="w-full h-16 bg-white/70 rounded-lg p-3 text-sm border border-white/80 outline-none resize-none" />
 
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Occasions (birthday,wedding)" value={newKit.occasion_tags} onChange={e => setNewKit(p => ({ ...p, occasion_tags: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Rooms (Living Room,Hall)" value={newKit.room_types} onChange={e => setNewKit(p => ({ ...p, room_types: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Occasions (birthday,wedding)" value={newKit.occasion_tags} onChange={e => setNewKit(p => ({ ...p, occasion_tags: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Rooms (Living Room,Hall)" value={newKit.room_types} onChange={e => setNewKit(p => ({ ...p, room_types: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Input placeholder="Labor Rs" type="number" value={newKit.labor_cost} onChange={e => setNewKit(p => ({ ...p, labor_cost: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Travel Rs" type="number" value={newKit.travel_cost || ''} onChange={e => setNewKit(p => ({ ...p, travel_cost: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Final Price" type="number" value={newKit.final_price} onChange={e => setNewKit(p => ({ ...p, final_price: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Labor Rs" type="number" value={newKit.labor_cost} onChange={e => setNewKit(p => ({ ...p, labor_cost: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Travel Rs" type="number" value={newKit.travel_cost || ''} onChange={e => setNewKit(p => ({ ...p, travel_cost: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Final Price" type="number" value={newKit.final_price} onChange={e => setNewKit(p => ({ ...p, final_price: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Input placeholder="Decor Chrg Rs" type="number" value={newKit.decoration_charges || ''} onChange={e => setNewKit(p => ({ ...p, decoration_charges: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Setup (min)" type="number" value={newKit.setup_time_minutes} onChange={e => setNewKit(p => ({ ...p, setup_time_minutes: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Decor Chrg Rs" type="number" value={newKit.decoration_charges || ''} onChange={e => setNewKit(p => ({ ...p, decoration_charges: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Setup (min)" type="number" value={newKit.setup_time_minutes} onChange={e => setNewKit(p => ({ ...p, setup_time_minutes: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Color Theme" value={newKit.color_theme} onChange={e => setNewKit(p => ({ ...p, color_theme: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <select value={newKit.difficulty} onChange={e => setNewKit(p => ({ ...p, difficulty: e.target.value }))} className="h-10 bg-gray-50 rounded-lg px-3 text-xs border border-gray-200">
+                  <Input placeholder="Color Theme" value={newKit.color_theme} onChange={e => setNewKit(p => ({ ...p, color_theme: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <select value={newKit.difficulty} onChange={e => setNewKit(p => ({ ...p, difficulty: e.target.value }))} className="h-10 bg-white/70 rounded-lg px-3 text-xs border border-white/80">
                     <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
                   </select>
                 </div>
@@ -636,24 +636,24 @@ export default function AdminScreen() {
                       <p className="text-xs font-bold text-pink-500 text-right">Items Total: Rs {kitItems.reduce((s, ki) => s + ki.unit_price * ki.quantity, 0)}</p>
                     </div>
                   )}
-                  <div className="bg-gray-50 rounded-lg p-2 space-y-1.5 border border-gray-200">
-                    <Input placeholder="Item Name (e.g., Small Latex Balloon)" value={newKitItem.name} onChange={e => setNewKitItem(p => ({ ...p, name: e.target.value }))} className="bg-white border-gray-200 h-9 rounded-lg text-xs" />
+                  <div className="bg-white/70 rounded-lg p-2 space-y-1.5 border border-white/80">
+                    <Input placeholder="Item Name (e.g., Small Latex Balloon)" value={newKitItem.name} onChange={e => setNewKitItem(p => ({ ...p, name: e.target.value }))} className="bg-white/70 border-white/80 h-9 rounded-lg text-xs" />
                     <div className="grid grid-cols-3 gap-1">
-                      <Input placeholder="Color" value={newKitItem.color} onChange={e => setNewKitItem(p => ({ ...p, color: e.target.value }))} className="bg-white border-gray-200 h-9 rounded-lg text-xs" />
-                      <Input placeholder="Size" value={newKitItem.size} onChange={e => setNewKitItem(p => ({ ...p, size: e.target.value }))} className="bg-white border-gray-200 h-9 rounded-lg text-xs" />
-                      <Input placeholder="Category" value={newKitItem.category} onChange={e => setNewKitItem(p => ({ ...p, category: e.target.value }))} className="bg-white border-gray-200 h-9 rounded-lg text-xs" />
+                      <Input placeholder="Color" value={newKitItem.color} onChange={e => setNewKitItem(p => ({ ...p, color: e.target.value }))} className="bg-white/70 border-white/80 h-9 rounded-lg text-xs" />
+                      <Input placeholder="Size" value={newKitItem.size} onChange={e => setNewKitItem(p => ({ ...p, size: e.target.value }))} className="bg-white/70 border-white/80 h-9 rounded-lg text-xs" />
+                      <Input placeholder="Category" value={newKitItem.category} onChange={e => setNewKitItem(p => ({ ...p, category: e.target.value }))} className="bg-white/70 border-white/80 h-9 rounded-lg text-xs" />
                     </div>
                     <div className="grid grid-cols-3 gap-1">
-                      <Input placeholder="Price/pc Rs" type="number" value={newKitItem.unit_price} onChange={e => setNewKitItem(p => ({ ...p, unit_price: e.target.value }))} className="bg-white border-gray-200 h-9 rounded-lg text-xs" />
-                      <Input placeholder="Qty" type="number" value={newKitItem.quantity} onChange={e => setNewKitItem(p => ({ ...p, quantity: e.target.value }))} className="bg-white border-gray-200 h-9 rounded-lg text-xs" />
-                      <Button onClick={addKitItem} size="sm" className="h-9 gradient-pink border-0 text-white text-xs rounded-lg"><Plus className="w-3 h-3 mr-1" />Add</Button>
+                      <Input placeholder="Price/pc Rs" type="number" value={newKitItem.unit_price} onChange={e => setNewKitItem(p => ({ ...p, unit_price: e.target.value }))} className="bg-white/70 border-white/80 h-9 rounded-lg text-xs" />
+                      <Input placeholder="Qty" type="number" value={newKitItem.quantity} onChange={e => setNewKitItem(p => ({ ...p, quantity: e.target.value }))} className="bg-white/70 border-white/80 h-9 rounded-lg text-xs" />
+                      <Button onClick={addKitItem} size="sm" className="h-9 btn-primary-luxury border-0 text-white text-xs rounded-lg"><Plus className="w-3 h-3 mr-1" />Add</Button>
                     </div>
                   </div>
                 </div>
 
-                <Input placeholder="Admin Notes" value={newKit.notes} onChange={e => setNewKit(p => ({ ...p, notes: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                <Input placeholder="Admin Notes" value={newKit.notes} onChange={e => setNewKit(p => ({ ...p, notes: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
 
-                <Button onClick={saveKit} className="w-full gradient-pink border-0 text-white font-bold rounded-xl shadow-pink">
+                <Button onClick={saveKit} className="w-full btn-primary-luxury border-0 text-white font-bold rounded-xl">
                   <Plus className="w-4 h-4 mr-1" /> Save Decoration Kit
                 </Button>
               </CardContent>
@@ -662,7 +662,7 @@ export default function AdminScreen() {
             {/* Existing Kits List */}
             <p className="text-xs text-gray-400">{kits.length} decoration kits</p>
             {kits.map(kit => (
-              <Card key={kit.id} className="border border-gray-100">
+              <Card key={kit.id} className="glass-card rounded-2xl">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-3">
                     {kit.reference_images?.[0] ? (
@@ -701,31 +701,31 @@ export default function AdminScreen() {
         {/* Kit Edit Modal */}
         {editingKit && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingKit(null)}>
-            <Card className="w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <Card className="glass-overlay rounded-2xl w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <CardContent className="p-4 space-y-2">
-                <h3 className="font-bold text-sm text-gray-700">Edit Kit</h3>
-                <Input placeholder="Kit Name *" value={editingKit.name} onChange={e => setEditingKit(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <textarea placeholder="Description" value={editingKit.description || ''} onChange={e => setEditingKit(p => ({ ...p, description: e.target.value }))} className="w-full h-16 bg-gray-50 rounded-lg p-3 text-sm border border-gray-200 outline-none resize-none" />
+                <h3 className="font-display text-xl text-gray-900">Edit Kit</h3>
+                <Input placeholder="Kit Name *" value={editingKit.name} onChange={e => setEditingKit(p => ({ ...p, name: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                <textarea placeholder="Description" value={editingKit.description || ''} onChange={e => setEditingKit(p => ({ ...p, description: e.target.value }))} className="w-full h-16 bg-white/70 rounded-lg p-3 text-sm border border-white/80 outline-none resize-none" />
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Occasions (birthday,wedding)" value={editingKit.occasion_tags} onChange={e => setEditingKit(p => ({ ...p, occasion_tags: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Rooms (Living Room,Hall)" value={editingKit.room_types} onChange={e => setEditingKit(p => ({ ...p, room_types: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Occasions (birthday,wedding)" value={editingKit.occasion_tags} onChange={e => setEditingKit(p => ({ ...p, occasion_tags: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Rooms (Living Room,Hall)" value={editingKit.room_types} onChange={e => setEditingKit(p => ({ ...p, room_types: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Input placeholder="Labor Rs" type="number" value={editingKit.labor_cost || ''} onChange={e => setEditingKit(p => ({ ...p, labor_cost: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Travel Rs" type="number" value={editingKit.travel_cost || ''} onChange={e => setEditingKit(p => ({ ...p, travel_cost: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Final Price" type="number" value={editingKit.final_price || ''} onChange={e => setEditingKit(p => ({ ...p, final_price: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Labor Rs" type="number" value={editingKit.labor_cost || ''} onChange={e => setEditingKit(p => ({ ...p, labor_cost: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Travel Rs" type="number" value={editingKit.travel_cost || ''} onChange={e => setEditingKit(p => ({ ...p, travel_cost: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Final Price" type="number" value={editingKit.final_price || ''} onChange={e => setEditingKit(p => ({ ...p, final_price: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Setup (min)" type="number" value={editingKit.setup_time_minutes || ''} onChange={e => setEditingKit(p => ({ ...p, setup_time_minutes: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
-                  <Input placeholder="Color Theme" value={editingKit.color_theme || ''} onChange={e => setEditingKit(p => ({ ...p, color_theme: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Setup (min)" type="number" value={editingKit.setup_time_minutes || ''} onChange={e => setEditingKit(p => ({ ...p, setup_time_minutes: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
+                  <Input placeholder="Color Theme" value={editingKit.color_theme || ''} onChange={e => setEditingKit(p => ({ ...p, color_theme: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
                 </div>
-                <select value={editingKit.difficulty || 'medium'} onChange={e => setEditingKit(p => ({ ...p, difficulty: e.target.value }))} className="w-full h-10 bg-gray-50 rounded-lg px-3 text-xs border border-gray-200">
+                <select value={editingKit.difficulty || 'medium'} onChange={e => setEditingKit(p => ({ ...p, difficulty: e.target.value }))} className="w-full h-10 bg-white/70 rounded-lg px-3 text-xs border border-white/80">
                   <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
                 </select>
-                <Input placeholder="Admin Notes" value={editingKit.notes || ''} onChange={e => setEditingKit(p => ({ ...p, notes: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg text-xs" />
+                <Input placeholder="Admin Notes" value={editingKit.notes || ''} onChange={e => setEditingKit(p => ({ ...p, notes: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg text-xs" />
                 <div className="flex gap-2 pt-1">
                   <Button onClick={() => setEditingKit(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>
-                  <Button onClick={updateKit} className="flex-1 gradient-pink border-0 text-white shadow-pink h-10 rounded-lg">Save</Button>
+                  <Button onClick={updateKit} className="flex-1 btn-primary-luxury border-0 text-white h-10 rounded-lg">Save</Button>
                 </div>
               </CardContent>
             </Card>
@@ -734,32 +734,32 @@ export default function AdminScreen() {
 
         {tab === 'items' && (
           <div className="space-y-3">
-            <Card className="border border-pink-100">
+            <Card className="glass-floating rounded-2xl">
               <CardContent className="p-4 space-y-2">
-                <h3 className="font-bold text-sm text-gray-700 mb-2">Add New Item</h3>
-                <Input placeholder="Item Name *" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <Input placeholder="Description" value={newItem.description} onChange={e => setNewItem(p => ({ ...p, description: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <h3 className="font-display text-xl text-gray-900 mb-2">Add New <span className="italic iridescent-text">Item</span></h3>
+                <Input placeholder="Item Name *" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                <Input placeholder="Description" value={newItem.description} onChange={e => setNewItem(p => ({ ...p, description: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 <div className="grid grid-cols-2 gap-2">
-                  <select value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} className="h-10 bg-gray-50 rounded-lg px-3 text-sm border border-gray-200">
+                  <select value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} className="h-10 bg-white/70 rounded-lg px-3 text-sm border border-white/80">
                     {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
                   </select>
-                  <Input placeholder="Color" value={newItem.color} onChange={e => setNewItem(p => ({ ...p, color: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Color" value={newItem.color} onChange={e => setNewItem(p => ({ ...p, color: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Material" value={newItem.material} onChange={e => setNewItem(p => ({ ...p, material: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                  <Input placeholder="Size" value={newItem.size} onChange={e => setNewItem(p => ({ ...p, size: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Material" value={newItem.material} onChange={e => setNewItem(p => ({ ...p, material: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                  <Input placeholder="Size" value={newItem.size} onChange={e => setNewItem(p => ({ ...p, size: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Price (Rs) *" type="number" value={newItem.price} onChange={e => setNewItem(p => ({ ...p, price: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                  <Input placeholder="Stock Count" type="number" value={newItem.stock_count} onChange={e => setNewItem(p => ({ ...p, stock_count: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Price (Rs) *" type="number" value={newItem.price} onChange={e => setNewItem(p => ({ ...p, price: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                  <Input placeholder="Stock Count" type="number" value={newItem.stock_count} onChange={e => setNewItem(p => ({ ...p, stock_count: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 </div>
-                <Input placeholder="Tags (comma-separated)" value={newItem.tags} onChange={e => setNewItem(p => ({ ...p, tags: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <Button onClick={addItem} className="w-full gradient-pink border-0 text-white shadow-pink"><Plus className="w-4 h-4 mr-1" /> Add Item</Button>
+                <Input placeholder="Tags (comma-separated)" value={newItem.tags} onChange={e => setNewItem(p => ({ ...p, tags: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                <Button onClick={addItem} className="w-full btn-primary-luxury border-0 text-white"><Plus className="w-4 h-4 mr-1" /> Add Item</Button>
               </CardContent>
             </Card>
             <p className="text-xs text-gray-400">{items.length} items in inventory</p>
             {items.map(item => (
-              <Card key={item.id} className="border border-gray-100">
+              <Card key={item.id} className="glass-card rounded-2xl">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-3">
                     {item.image_url ? (
@@ -789,29 +789,29 @@ export default function AdminScreen() {
         {/* Item Edit Modal */}
         {editingItem && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingItem(null)}>
-            <Card className="w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <Card className="glass-overlay rounded-2xl w-full max-w-sm mb-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <CardContent className="p-4 space-y-2">
-                <h3 className="font-bold text-sm text-gray-700">Edit Item</h3>
-                <Input placeholder="Item Name *" value={editingItem.name} onChange={e => setEditingItem(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <Input placeholder="Description" value={editingItem.description || ''} onChange={e => setEditingItem(p => ({ ...p, description: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <h3 className="font-display text-xl text-gray-900">Edit Item</h3>
+                <Input placeholder="Item Name *" value={editingItem.name} onChange={e => setEditingItem(p => ({ ...p, name: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                <Input placeholder="Description" value={editingItem.description || ''} onChange={e => setEditingItem(p => ({ ...p, description: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 <div className="grid grid-cols-2 gap-2">
-                  <select value={editingItem.category} onChange={e => setEditingItem(p => ({ ...p, category: e.target.value }))} className="h-10 bg-gray-50 rounded-lg px-3 text-sm border border-gray-200">
+                  <select value={editingItem.category} onChange={e => setEditingItem(p => ({ ...p, category: e.target.value }))} className="h-10 bg-white/70 rounded-lg px-3 text-sm border border-white/80">
                     {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
                   </select>
-                  <Input placeholder="Color" value={editingItem.color || ''} onChange={e => setEditingItem(p => ({ ...p, color: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Color" value={editingItem.color || ''} onChange={e => setEditingItem(p => ({ ...p, color: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Material" value={editingItem.material || ''} onChange={e => setEditingItem(p => ({ ...p, material: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                  <Input placeholder="Size" value={editingItem.size || ''} onChange={e => setEditingItem(p => ({ ...p, size: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Material" value={editingItem.material || ''} onChange={e => setEditingItem(p => ({ ...p, material: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                  <Input placeholder="Size" value={editingItem.size || ''} onChange={e => setEditingItem(p => ({ ...p, size: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Price (Rs) *" type="number" value={editingItem.price} onChange={e => setEditingItem(p => ({ ...p, price: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                  <Input placeholder="Stock Count" type="number" value={editingItem.stock_count} onChange={e => setEditingItem(p => ({ ...p, stock_count: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                  <Input placeholder="Price (Rs) *" type="number" value={editingItem.price} onChange={e => setEditingItem(p => ({ ...p, price: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                  <Input placeholder="Stock Count" type="number" value={editingItem.stock_count} onChange={e => setEditingItem(p => ({ ...p, stock_count: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 </div>
-                <Input placeholder="Tags (comma-separated)" value={editingItem.tags || ''} onChange={e => setEditingItem(p => ({ ...p, tags: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                <Input placeholder="Tags (comma-separated)" value={editingItem.tags || ''} onChange={e => setEditingItem(p => ({ ...p, tags: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                 <div className="flex gap-2 pt-1">
                   <Button onClick={() => setEditingItem(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>
-                  <Button onClick={() => updateItem(editingItem.id, { ...editingItem, price: Number(editingItem.price), stock_count: Number(editingItem.stock_count), tags: typeof editingItem.tags === 'string' ? editingItem.tags.split(',').map(t => t.trim()).filter(Boolean) : editingItem.tags })} className="flex-1 gradient-pink border-0 text-white shadow-pink h-10 rounded-lg">Save</Button>
+                  <Button onClick={() => updateItem(editingItem.id, { ...editingItem, price: Number(editingItem.price), stock_count: Number(editingItem.stock_count), tags: typeof editingItem.tags === 'string' ? editingItem.tags.split(',').map(t => t.trim()).filter(Boolean) : editingItem.tags })} className="flex-1 btn-primary-luxury border-0 text-white h-10 rounded-lg">Save</Button>
                 </div>
               </CardContent>
             </Card>
@@ -821,13 +821,13 @@ export default function AdminScreen() {
         {/* ── Delete Item Confirm ── */}
         {deletingItem && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="glass-overlay rounded-2xl w-full max-w-sm p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5 text-red-500" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">Delete Item?</h3>
+                  <h3 className="font-display text-xl text-gray-900">Delete Item?</h3>
                   <p className="text-xs text-gray-400">This action cannot be undone</p>
                 </div>
               </div>
@@ -845,13 +845,13 @@ export default function AdminScreen() {
         {/* ── Delete Kit Confirm ── */}
         {deletingKit && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="glass-overlay rounded-2xl w-full max-w-sm p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5 text-red-500" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800">Delete Kit?</h3>
+                  <h3 className="font-display text-xl text-gray-900">Delete Kit?</h3>
                   <p className="text-xs text-gray-400">This action cannot be undone</p>
                 </div>
               </div>
@@ -869,30 +869,30 @@ export default function AdminScreen() {
         {tab === 'delivery' && (
           <div className="space-y-3">
             {/* Add Form */}
-            <Card className="border border-pink-100">
+            <Card className="glass-floating rounded-2xl">
               <CardContent className="p-4 space-y-2">
-                <h3 className="font-bold text-sm text-gray-700 mb-2">Add Team Member</h3>
-                <Input placeholder="Name *" value={newDp.name} onChange={e => setNewDp(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <Input placeholder="Phone" value={newDp.phone} onChange={e => setNewDp(p => ({ ...p, phone: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <Input placeholder="Password (default: 1234)" value={newDp.password} onChange={e => setNewDp(p => ({ ...p, password: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                <Button onClick={addDeliveryPerson} className="w-full gradient-pink border-0 text-white shadow-pink"><Plus className="w-4 h-4 mr-1" /> Add Member</Button>
+                <h3 className="font-display text-xl text-gray-900 mb-2">Add Team <span className="italic iridescent-text">Member</span></h3>
+                <Input placeholder="Name *" value={newDp.name} onChange={e => setNewDp(p => ({ ...p, name: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                <Input placeholder="Phone" value={newDp.phone} onChange={e => setNewDp(p => ({ ...p, phone: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                <Input placeholder="Password (default: 1234)" value={newDp.password} onChange={e => setNewDp(p => ({ ...p, password: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                <Button onClick={addDeliveryPerson} className="w-full btn-primary-luxury border-0 text-white"><Plus className="w-4 h-4 mr-1" /> Add Member</Button>
               </CardContent>
             </Card>
 
             {/* Team list */}
             <p className="text-xs text-gray-400 px-1">{deliveryPersons.length} member{deliveryPersons.length !== 1 ? 's' : ''}</p>
             {deliveryPersons.map(dp => (
-              <Card key={dp.id} className="border border-gray-100">
+              <Card key={dp.id} className="glass-card rounded-2xl">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full gradient-pink flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full iridescent flex items-center justify-center flex-shrink-0">
                       <Truck className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-700">{dp.name}</p>
                       <p className="text-xs text-gray-400">{dp.phone || 'No phone'}</p>
                       <div className="flex gap-2 mt-1 flex-wrap">
-                        <span className="text-xs text-gray-400">⭐ {dp.rating?.toFixed(1) || '5.0'}</span>
+                        <span className="text-xs text-gray-400 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {dp.rating?.toFixed(1) || '5.0'}</span>
                         <span className="text-xs text-gray-400">· {dp.total_deliveries || 0} jobs</span>
                       </div>
                     </div>
@@ -920,12 +920,12 @@ export default function AdminScreen() {
             {/* Edit Modal */}
             {editingDp && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingDp(null)}>
-                <Card className="w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
+                <Card className="glass-overlay rounded-2xl w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
                   <CardContent className="p-4 space-y-3">
-                    <h3 className="font-bold text-sm text-gray-700">Edit Team Member</h3>
-                    <Input placeholder="Name *" value={editingDp.name} onChange={e => setEditingDp(p => ({ ...p, name: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                    <Input placeholder="Phone" value={editingDp.phone || ''} onChange={e => setEditingDp(p => ({ ...p, phone: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
-                    <Input placeholder="New Password (leave blank to keep)" value={editingDp.password || ''} onChange={e => setEditingDp(p => ({ ...p, password: e.target.value }))} className="bg-gray-50 border-gray-200 h-10 rounded-lg" />
+                    <h3 className="font-display text-xl text-gray-900">Edit Team Member</h3>
+                    <Input placeholder="Name *" value={editingDp.name} onChange={e => setEditingDp(p => ({ ...p, name: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                    <Input placeholder="Phone" value={editingDp.phone || ''} onChange={e => setEditingDp(p => ({ ...p, phone: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
+                    <Input placeholder="New Password (leave blank to keep)" value={editingDp.password || ''} onChange={e => setEditingDp(p => ({ ...p, password: e.target.value }))} className="bg-white/70 border-white/80 h-10 rounded-lg" />
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600">Active</span>
                       <button
@@ -937,7 +937,7 @@ export default function AdminScreen() {
                     </div>
                     <div className="flex gap-2">
                       <Button onClick={() => setEditingDp(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>
-                      <Button onClick={updateDeliveryPerson} className="flex-1 gradient-pink border-0 text-white shadow-pink h-10 rounded-lg">Save</Button>
+                      <Button onClick={updateDeliveryPerson} className="flex-1 btn-primary-luxury border-0 text-white h-10 rounded-lg">Save</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -947,9 +947,9 @@ export default function AdminScreen() {
             {/* Delete Confirm Modal */}
             {deletingDp && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDeletingDp(null)}>
-                <Card className="w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
+                <Card className="glass-overlay rounded-2xl w-full max-w-sm mb-4" onClick={e => e.stopPropagation()}>
                   <CardContent className="p-4 space-y-3">
-                    <h3 className="font-bold text-sm text-gray-700">Remove Team Member?</h3>
+                    <h3 className="font-display text-xl text-gray-900">Remove Team Member?</h3>
                     <p className="text-sm text-gray-500">Remove <span className="font-semibold text-gray-700">{deletingDp.name}</span> from the team? This cannot be undone.</p>
                     <div className="flex gap-2">
                       <Button onClick={() => setDeletingDp(null)} variant="outline" className="flex-1 h-10 rounded-lg">Cancel</Button>

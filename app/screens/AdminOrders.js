@@ -88,7 +88,7 @@ export default function AdminOrders() {
         <button
           onClick={refresh}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2.5 bg-pink-500 hover:bg-pink-600 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2.5 btn-primary-luxury text-white rounded-xl text-sm font-semibold disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -110,7 +110,7 @@ export default function AdminOrders() {
       </div>
 
       {/* Orders List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="glass-floating rounded-2xl overflow-hidden">
         {sorted.length === 0 ? (
           <div className="py-16 text-center">
             <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />

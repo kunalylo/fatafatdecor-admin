@@ -107,7 +107,7 @@ export default function AdminUsers() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Customers</h2>
+          <h2 className="font-display text-2xl text-gray-900">Customers</h2>
           <p className="text-sm text-gray-400 mt-0.5">{users.length} registered users</p>
         </div>
         <button
@@ -131,7 +131,7 @@ export default function AdminUsers() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="glass-floating rounded-2xl overflow-hidden">
         {fetching ? (
           <div className="flex justify-center items-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-pink-400" />

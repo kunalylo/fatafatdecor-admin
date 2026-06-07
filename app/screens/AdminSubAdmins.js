@@ -109,12 +109,12 @@ export default function AdminSubAdmins() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Sub-Admins</h2>
+          <h2 className="font-display text-2xl text-gray-900">Sub-Admins</h2>
           <p className="text-sm text-gray-400 mt-0.5">Manage team members with limited access</p>
         </div>
         <Button
           onClick={openCreate}
-          className="bg-pink-500 hover:bg-pink-600 text-white border-0 rounded-xl h-10 px-4 flex items-center gap-2"
+          className="btn-primary-luxury text-white border-0 rounded-xl h-10 px-4 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add Sub-Admin
@@ -133,7 +133,7 @@ export default function AdminSubAdmins() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="glass-floating rounded-2xl overflow-hidden">
         {fetching ? (
           <div className="flex justify-center items-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-pink-400" />
@@ -324,7 +324,7 @@ export default function AdminSubAdmins() {
               <Button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1 h-11 rounded-xl bg-pink-500 hover:bg-pink-600 text-white border-0"
+                className="flex-1 h-11 rounded-xl btn-primary-luxury text-white border-0"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editId ? 'Save Changes' : 'Create Sub-Admin')}
               </Button>

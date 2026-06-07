@@ -91,7 +91,7 @@ export default function AdminCities() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Cities</h2>
+          <h2 className="font-display text-2xl text-gray-900">Cities</h2>
           <p className="text-sm text-gray-400 mt-0.5">
             <span className="text-green-600 font-semibold">{activeCount} active</span>
             {inactiveCount > 0 && <span className="text-gray-400"> · {inactiveCount} inactive</span>}
@@ -100,7 +100,7 @@ export default function AdminCities() {
         </div>
         <Button
           onClick={openCreate}
-          className="bg-pink-500 hover:bg-pink-600 text-white border-0 rounded-xl h-10 px-4 flex items-center gap-2"
+          className="btn-primary-luxury text-white border-0 rounded-xl h-10 px-4 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add City
@@ -113,7 +113,7 @@ export default function AdminCities() {
           <Loader2 className="w-6 h-6 animate-spin text-pink-400" />
         </div>
       ) : cities.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 text-center py-16">
+        <div className="glass-floating rounded-2xl text-center py-16">
           <MapPin className="w-10 h-10 text-gray-200 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">No cities added yet</p>
           <Button onClick={openCreate} variant="outline" className="mt-4 rounded-xl border-pink-200 text-pink-500">
@@ -227,7 +227,7 @@ export default function AdminCities() {
               <Button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1 h-11 rounded-xl bg-pink-500 hover:bg-pink-600 text-white border-0"
+                className="flex-1 h-11 rounded-xl btn-primary-luxury text-white border-0"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editCity ? 'Save Changes' : 'Add City')}
               </Button>

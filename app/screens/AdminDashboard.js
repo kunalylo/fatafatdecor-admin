@@ -10,12 +10,12 @@ import { useApp } from '../context/AppContext'
 
 function StatCard({ icon: Icon, label, value, sub, color }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+    <div className="glass-floating rounded-2xl p-5 flex items-center gap-4">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
         <Icon className="w-6 h-6 text-white" />
       </div>
       <div className="min-w-0">
-        <p className="text-2xl font-extrabold text-gray-800">{value}</p>
+        <p className="text-2xl font-extrabold text-gray-900">{value}</p>
         <p className="text-sm font-medium text-gray-600">{label}</p>
         {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
       </div>
@@ -68,13 +68,13 @@ export default function AdminDashboard() {
       {/* Header with Refresh */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
-          <p className="text-sm text-gray-400 mt-0.5">Overview of your business</p>
+          <p className="eyebrow text-gray-400">Overview</p>
+          <h2 className="font-display text-3xl text-gray-900 leading-tight">Dash<span className="italic iridescent-text">board</span></h2>
         </div>
         <button
           onClick={refresh}
           disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl glass-card text-sm text-gray-600 hover:bg-white/70 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
@@ -91,38 +91,38 @@ export default function AdminDashboard() {
 
       {/* Status Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+        <div className="glass-floating rounded-2xl p-4 text-center">
           <Clock className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-gray-800">{pendingOrders}</p>
+          <p className="text-2xl font-bold text-gray-900">{pendingOrders}</p>
           <p className="text-xs text-gray-500">Pending</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+        <div className="glass-floating rounded-2xl p-4 text-center">
           <AlertCircle className="w-6 h-6 text-blue-500 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-gray-800">{activeOrders}</p>
+          <p className="text-2xl font-bold text-gray-900">{activeOrders}</p>
           <p className="text-xs text-gray-500">Active</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+        <div className="glass-floating rounded-2xl p-4 text-center">
           <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-gray-800">{deliveredOrders}</p>
+          <p className="text-2xl font-bold text-gray-900">{deliveredOrders}</p>
           <p className="text-xs text-gray-500">Delivered</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center">
+        <div className="glass-floating rounded-2xl p-4 text-center">
           <XCircle className="w-6 h-6 text-red-400 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-gray-800">{cancelledOrders}</p>
+          <p className="text-2xl font-bold text-gray-900">{cancelledOrders}</p>
           <p className="text-xs text-gray-500">Cancelled</p>
         </div>
       </div>
 
       {/* Recent Orders Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-bold text-gray-800 text-base">Recent Orders</h3>
+      <div className="glass-floating rounded-2xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/50 flex items-center justify-between">
+          <h3 className="font-display text-lg text-gray-900">Recent Orders</h3>
           <span className="text-xs text-gray-400">{realOrders.length} total</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-white/40 text-left">
                 <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Order</th>
                 <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</th>
                 <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</th>

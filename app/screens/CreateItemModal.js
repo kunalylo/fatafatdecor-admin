@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, Save, Loader2 } from 'lucide-react'
+import { X, Save, Loader2, Lock, RefreshCw } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
 
@@ -125,10 +125,11 @@ export default function CreateItemModal({ onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
+      <div className="glass-floating rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 glass-overlay border-b border-white/40 px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Add New Item</h3>
+            <p className="eyebrow text-gray-500">Inventory</p>
+            <h3 className="font-display text-2xl text-gray-900">Add New <span className="italic iridescent-text">Item</span></h3>
             <p className="text-xs text-gray-500">Manually create a new SKU in master inventory.</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
@@ -143,16 +144,16 @@ export default function CreateItemModal({ onClose, onSaved }) {
               <label className="text-xs text-gray-600 font-semibold">SKU Code (auto-generated)</label>
               <button
                 onClick={() => setSkuLocked(l => !l)}
-                className="text-[10px] text-pink-600 hover:underline"
+                className="text-[10px] text-pink-600 hover:underline flex items-center gap-1"
               >
-                {skuLocked ? '🔒 Edit manually' : '↻ Auto-sync from fields'}
+                {skuLocked ? <><Lock className="w-3 h-3" /> Edit manually</> : <><RefreshCw className="w-3 h-3" /> Auto-sync from fields</>}
               </button>
             </div>
             <input
               type="text"
               value={form.sku_code}
               onChange={e => { setSkuLocked(true); setForm(f => ({ ...f, sku_code: e.target.value })) }}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:border-pink-400"
+              className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm font-mono focus:outline-none focus:border-pink-400"
             />
           </div>
 
@@ -161,7 +162,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
               <select
                 value={form.category}
                 onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               >
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -173,7 +174,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
                 value={form.subcategory}
                 onChange={e => setForm(f => ({ ...f, subcategory: e.target.value }))}
                 placeholder="e.g. Matte Latex"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               />
             </Field>
 
@@ -183,7 +184,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
                 value={form.color}
                 onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
                 placeholder="e.g. Rose Gold"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               />
             </Field>
 
@@ -191,7 +192,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
               <select
                 value={form.finish}
                 onChange={e => setForm(f => ({ ...f, finish: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               >
                 {FINISHES.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
@@ -202,7 +203,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
                 type="number"
                 value={form.size_inches}
                 onChange={e => setForm(f => ({ ...f, size_inches: Number(e.target.value) }))}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               />
             </Field>
 
@@ -210,7 +211,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
               <select
                 value={form.shape}
                 onChange={e => setForm(f => ({ ...f, shape: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               >
                 {SHAPES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -221,7 +222,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
                 type="number"
                 value={form.pack_quantity}
                 onChange={e => setForm(f => ({ ...f, pack_quantity: Number(e.target.value) }))}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               />
             </Field>
 
@@ -231,7 +232,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
                 step="0.01"
                 value={form.per_unit_cost}
                 onChange={e => setForm(f => ({ ...f, per_unit_cost: Number(e.target.value) }))}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               />
             </Field>
 
@@ -251,7 +252,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
                 step="0.01"
                 value={form.cost_price_pack}
                 onChange={e => setForm(f => ({ ...f, cost_price_pack: Number(e.target.value) }))}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+                className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
               />
             </Field>
           </div>
@@ -262,7 +263,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
               value={form.brand_supplier}
               onChange={e => setForm(f => ({ ...f, brand_supplier: e.target.value }))}
               placeholder="e.g. Wanna Party / Amazon"
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+              className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
             />
           </Field>
 
@@ -272,7 +273,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
               value={form.source_url}
               onChange={e => setForm(f => ({ ...f, source_url: e.target.value }))}
               placeholder="https://..."
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+              className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
             />
           </Field>
 
@@ -282,7 +283,7 @@ export default function CreateItemModal({ onClose, onSaved }) {
               onChange={e => setForm(f => ({ ...f, ai_usage_notes: e.target.value }))}
               rows={2}
               placeholder="e.g. Use for ceiling clusters, garlands..."
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+              className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
             />
           </Field>
 
@@ -292,12 +293,12 @@ export default function CreateItemModal({ onClose, onSaved }) {
           </label>
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 flex gap-2 justify-end">
-          <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
+        <div className="sticky bottom-0 glass-overlay border-t border-white/40 p-4 flex gap-2 justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-white/50 rounded-lg text-sm">Cancel</button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-5 py-2 bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
+            className="btn-primary-luxury px-5 py-2 disabled:opacity-60 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
           >
             {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Create Item</>}
           </button>

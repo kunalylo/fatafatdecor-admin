@@ -11,7 +11,7 @@ export default function InventoryScreen() {
   return (
     <div className="h-full flex flex-col">
       {/* Tab Switcher */}
-      <div className="bg-white border-b border-gray-200 px-6">
+      <div className="glass-overlay border-b border-white/40 px-6">
         <div className="flex gap-1">
           <button
             onClick={() => setTab('items')}

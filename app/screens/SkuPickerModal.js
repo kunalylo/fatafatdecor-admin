@@ -64,15 +64,15 @@ export default function SkuPickerModal({ onClose, onAdd }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-        <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900">Add Item from Inventory</h3>
+      <div className="glass-floating rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+        <div className="glass-overlay border-b border-white/40 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <h3 className="font-display text-2xl text-gray-900">Add <span className="italic iridescent-text">Item</span> from Inventory</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-white/40">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -81,7 +81,7 @@ export default function SkuPickerModal({ onClose, onAdd }) {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search e.g. 'gold chrome 12' or 'pink pearl'..."
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+              className="w-full pl-9 pr-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
             />
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function SkuPickerModal({ onClose, onAdd }) {
                     onClick={() => setSelected(item)}
                     className={`
                       w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition
-                      ${isSelected ? 'bg-pink-50 border border-pink-300' : 'hover:bg-gray-50 border border-transparent'}
+                      ${isSelected ? 'glass-card border border-pink-300' : 'hover:bg-white/40 border border-transparent'}
                     `}
                   >
                     <div className="flex-1 min-w-0">
@@ -122,7 +122,7 @@ export default function SkuPickerModal({ onClose, onAdd }) {
         </div>
 
         {/* Footer with quantity + add */}
-        <div className="border-t border-gray-100 px-6 py-4 bg-gray-50 flex items-center gap-3">
+        <div className="glass-overlay border-t border-white/40 px-6 py-4 flex items-center gap-3 rounded-b-2xl">
           <div className="flex-1 min-w-0">
             {selected ? (
               <p className="text-sm text-gray-700 truncate">
@@ -139,13 +139,13 @@ export default function SkuPickerModal({ onClose, onAdd }) {
               min="1"
               value={quantity}
               onChange={e => setQuantity(e.target.value)}
-              className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:border-pink-400 text-center"
+              className="w-20 px-2 py-1.5 bg-white/70 border border-white/80 rounded text-sm focus:outline-none focus:border-pink-400 text-center"
             />
           </div>
           <button
             onClick={handleAdd}
             disabled={!selected}
-            className="px-4 py-2 bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white text-sm font-semibold rounded-lg flex items-center gap-1"
+            className="px-4 py-2 btn-primary-luxury disabled:opacity-50 text-white text-sm font-semibold rounded-lg flex items-center gap-1"
           >
             <Plus className="w-4 h-4" /> Add to List
           </button>

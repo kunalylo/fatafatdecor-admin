@@ -94,7 +94,7 @@ export default function ReferenceDesignsTab() {
       <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={() => setShowUpload(true)}
-          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
+          className="px-4 py-2 btn-primary-luxury text-white text-sm font-semibold rounded-lg flex items-center gap-2"
         >
           <Upload className="w-4 h-4" />
           Upload Reference
@@ -102,21 +102,21 @@ export default function ReferenceDesignsTab() {
 
         <div className="flex gap-2 ml-auto flex-wrap">
           <select value={bracket} onChange={e => { setBracket(e.target.value); setPage(1) }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+            className="px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm">
             <option value="">All budgets</option>
             {BUDGET_BRACKETS.map(b => <option key={b.id} value={b.id}>{b.label}</option>)}
           </select>
           <select value={occasion} onChange={e => { setOccasion(e.target.value); setPage(1) }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+            className="px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm">
             <option value="">All occasions</option>
             {OCCASIONS.map(o => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
           </select>
           <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+            className="px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm">
             {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
           <select value={sort} onChange={e => { setSort(e.target.value); setPage(1) }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
+            className="px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm">
             {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
@@ -134,11 +134,11 @@ export default function ReferenceDesignsTab() {
 
       {/* Budget Coverage — which brackets have references, click to filter */}
       {coverage && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="glass-floating rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-4 h-4 text-pink-500" />
-            <h4 className="font-semibold text-gray-900 text-sm">Budget Coverage</h4>
-            <span className="text-xs text-gray-500">— click a bracket to filter</span>
+            <h4 className="font-display text-xl text-gray-900">Budget Coverage</h4>
+            <span className="text-xs text-gray-500">click a bracket to filter</span>
           </div>
           <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
             {coverage.brackets.map(b => {
@@ -150,9 +150,9 @@ export default function ReferenceDesignsTab() {
                   onClick={() => { setBracket(isActive ? '' : b.id); setPage(1) }}
                   className={`
                     px-2 py-2 rounded-lg border text-center transition
-                    ${isActive ? 'bg-pink-500 border-pink-500 text-white' :
-                     empty ? 'bg-gray-50 border-gray-200 text-gray-400 hover:border-pink-300' :
-                     'bg-white border-gray-200 text-gray-800 hover:border-pink-300'}
+                    ${isActive ? 'btn-primary-luxury border-transparent text-white' :
+                     empty ? 'bg-white/50 border-white/70 text-gray-400 hover:border-pink-300' :
+                     'bg-white/70 border-white/80 text-gray-800 hover:border-pink-300'}
                   `}
                   title={empty ? 'No references in this bracket — gap to fill' : `${b.count} references, ${b.avg_margin?.toFixed(1)}% avg margin`}
                 >
@@ -169,8 +169,9 @@ export default function ReferenceDesignsTab() {
             })}
           </div>
           {coverage.gaps?.length > 0 && (
-            <div className="mt-3 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
-              ⚠ {coverage.gaps.length} bracket × occasion gap{coverage.gaps.length === 1 ? '' : 's'} — upload references to cover popular occasions in empty brackets
+            <div className="mt-3 text-[11px] text-amber-700 bg-amber-50/80 border border-amber-200/70 rounded px-3 py-1.5 flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>{coverage.gaps.length} bracket × occasion gap{coverage.gaps.length === 1 ? '' : 's'} — upload references to cover popular occasions in empty brackets</span>
             </div>
           )}
         </div>
@@ -180,12 +181,12 @@ export default function ReferenceDesignsTab() {
       {loading && refs.length === 0 ? (
         <div className="p-12 text-center text-gray-500">Loading references...</div>
       ) : refs.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+        <div className="glass-floating rounded-2xl p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-700 font-semibold mb-1">No references yet</p>
           <p className="text-sm text-gray-500 mb-4">Upload decoration photos to start building your library.</p>
           <button onClick={() => setShowUpload(true)}
-            className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold rounded-lg inline-flex items-center gap-2">
+            className="px-4 py-2 btn-primary-luxury text-white text-sm font-semibold rounded-lg inline-flex items-center gap-2">
             <Upload className="w-4 h-4" /> Upload First Reference
           </button>
         </div>
@@ -201,12 +202,12 @@ export default function ReferenceDesignsTab() {
       {pages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-4">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded text-sm">
+            className="px-3 py-1 glass-card hover:bg-white/80 disabled:opacity-50 rounded-lg text-sm">
             Prev
           </button>
           <span className="text-sm text-gray-600">Page {page} of {pages}</span>
           <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded text-sm">
+            className="px-3 py-1 glass-card hover:bg-white/80 disabled:opacity-50 rounded-lg text-sm">
             Next
           </button>
         </div>
@@ -229,7 +230,7 @@ function StatCard({ label, value, accent }) {
     pink:  'text-pink-600',
   }[accent] || 'text-gray-900'
   return (
-    <div className="bg-white p-4 rounded-lg border border-gray-200">
+    <div className="glass-floating p-4 rounded-2xl">
       <p className="text-xs text-gray-500">{label}</p>
       <p className={`text-2xl font-bold ${accentClass}`}>{value}</p>
     </div>
@@ -269,7 +270,7 @@ function ReferenceCard({ reference: r, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:border-pink-400 hover:shadow-lg transition-all text-left group"
+      className="glass-floating rounded-2xl overflow-hidden hover:border-pink-400 hover:shadow-lg transition-all text-left group"
     >
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
         {r.thumbnail_url || r.image_url ? (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Upload, Search, Edit2, X, Package, Plus } from 'lucide-react'
+import { Upload, Search, Edit2, X, Package, Plus, Bot, Zap } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
 import CreateItemModal from './CreateItemModal'
@@ -94,7 +94,7 @@ export default function InventoryItemsTab() {
             placeholder="Search SKU, color, category..."
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
-            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+            className="w-full pl-9 pr-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
           />
         </div>
 
@@ -109,7 +109,7 @@ export default function InventoryItemsTab() {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
-          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
+          className="btn-primary-luxury px-4 py-2 disabled:opacity-60 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
         >
           <Upload className="w-4 h-4" />
           {importing ? 'Importing...' : 'Import Excel'}
@@ -126,31 +126,31 @@ export default function InventoryItemsTab() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="glass-floating p-4 rounded-2xl">
             <p className="text-xs text-gray-500">Total SKUs</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total.toLocaleString()}</p>
           </div>
           <button
             onClick={() => { setUsedOnly(true); setAutoOnly(false); setPage(1) }}
-            className={`p-4 rounded-lg border text-left transition ${usedOnly ? 'bg-green-100 border-green-400' : 'bg-white border-gray-200 hover:border-green-300'}`}
+            className={`p-4 rounded-2xl border text-left transition ${usedOnly ? 'bg-green-100 border-green-400' : 'glass-floating border-white/60 hover:border-green-300'}`}
             title="Click to filter to SKUs used in approved references"
           >
-            <p className="text-xs text-green-700">🤖 Used in References</p>
+            <p className="text-xs text-green-700 flex items-center gap-1"><Bot className="w-3.5 h-3.5" /> Used in References</p>
             <p className="text-2xl font-bold text-green-700">{(stats.used_in_references || 0).toLocaleString()}</p>
           </button>
           <button
             onClick={() => { setAutoOnly(true); setUsedOnly(false); setPage(1) }}
-            className={`p-4 rounded-lg border text-left transition ${autoOnly ? 'bg-purple-100 border-purple-400' : 'bg-white border-gray-200 hover:border-purple-300'}`}
+            className={`p-4 rounded-2xl border text-left transition ${autoOnly ? 'bg-purple-100 border-purple-400' : 'glass-floating border-white/60 hover:border-purple-300'}`}
             title="Click to filter to auto-created SKUs"
           >
-            <p className="text-xs text-purple-700">⚡ Auto-created</p>
+            <p className="text-xs text-purple-700 flex items-center gap-1"><Zap className="w-3.5 h-3.5" /> Auto-created</p>
             <p className="text-2xl font-bold text-purple-700">{(stats.auto_created || 0).toLocaleString()}</p>
           </button>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="glass-floating p-4 rounded-2xl">
             <p className="text-xs text-gray-500">Categories</p>
             <p className="text-2xl font-bold text-gray-900">{stats.categories?.length || 0}</p>
           </div>
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="glass-floating p-4 rounded-2xl">
             <p className="text-xs text-gray-500">Colors</p>
             <p className="text-2xl font-bold text-gray-900">{stats.colors?.length || 0}</p>
           </div>
@@ -163,7 +163,7 @@ export default function InventoryItemsTab() {
           <select
             value={category}
             onChange={e => { setCategory(e.target.value); setPage(1) }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none"
+            className="px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none"
           >
             <option value="">All categories</option>
             {stats.categories.map(c => (
@@ -173,7 +173,7 @@ export default function InventoryItemsTab() {
           <select
             value={color}
             onChange={e => { setColor(e.target.value); setPage(1) }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none"
+            className="px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none"
           >
             <option value="">All colors</option>
             {stats.colors.slice(0, 30).map(c => (
@@ -183,28 +183,28 @@ export default function InventoryItemsTab() {
           <select
             value={finish}
             onChange={e => { setFinish(e.target.value); setPage(1) }}
-            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none"
+            className="px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none"
           >
             <option value="">All finishes</option>
             {stats.finishes.map(f => (
               <option key={f.name} value={f.name}>{f.name} ({f.count})</option>
             ))}
           </select>
-          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm cursor-pointer hover:border-green-300">
+          <label className="flex items-center gap-2 px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm cursor-pointer hover:border-green-300">
             <input
               type="checkbox"
               checked={usedOnly}
               onChange={e => { setUsedOnly(e.target.checked); setPage(1) }}
             />
-            <span className="text-green-700 font-semibold">🤖 Used in refs only</span>
+            <span className="text-green-700 font-semibold flex items-center gap-1"><Bot className="w-3.5 h-3.5" /> Used in refs only</span>
           </label>
-          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm cursor-pointer hover:border-purple-300">
+          <label className="flex items-center gap-2 px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm cursor-pointer hover:border-purple-300">
             <input
               type="checkbox"
               checked={autoOnly}
               onChange={e => { setAutoOnly(e.target.checked); setPage(1) }}
             />
-            <span className="text-purple-700 font-semibold">⚡ Auto-created only</span>
+            <span className="text-purple-700 font-semibold flex items-center gap-1"><Zap className="w-3.5 h-3.5" /> Auto-created only</span>
           </label>
           {(category || color || finish || search || autoOnly || usedOnly) && (
             <button
@@ -218,7 +218,7 @@ export default function InventoryItemsTab() {
       )}
 
       {/* Items Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="glass-floating rounded-2xl overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-gray-500">Loading...</div>
         ) : items.length === 0 ? (
@@ -230,7 +230,7 @@ export default function InventoryItemsTab() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              <thead className="bg-white/50 text-xs font-semibold text-gray-600 uppercase tracking-wide">
                 <tr>
                   <th className="px-4 py-3 text-left">SKU</th>
                   <th className="px-4 py-3 text-left">Category</th>
@@ -252,13 +252,13 @@ export default function InventoryItemsTab() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-mono text-xs text-gray-700 truncate">{item.sku_code}</span>
                         {item.auto_created && (
-                          <span className="text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200 shrink-0">
-                            ⚡ Auto-SKU
+                          <span className="text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200 shrink-0 inline-flex items-center gap-0.5">
+                            <Zap className="w-2.5 h-2.5" /> Auto-SKU
                           </span>
                         )}
                         {item.used_in_references_count > 0 && (
-                          <span className="text-[9px] uppercase font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200 shrink-0">
-                            🤖 Used ×{item.used_in_references_count}
+                          <span className="text-[9px] uppercase font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200 shrink-0 inline-flex items-center gap-0.5">
+                            <Bot className="w-2.5 h-2.5" /> Used ×{item.used_in_references_count}
                           </span>
                         )}
                         {item.needs_review && (
@@ -362,11 +362,11 @@ function ItemEditModal({ item, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+      <div className="glass-floating rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 glass-overlay border-b border-white/40 px-6 py-4 flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-500 font-mono">{item.sku_code}</p>
-            <h3 className="text-lg font-bold text-gray-900">{item.subcategory || item.category}</h3>
+            <h3 className="font-display text-xl text-gray-900">{item.subcategory || item.category}</h3>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
             <X className="w-5 h-5" />
@@ -391,9 +391,9 @@ function ItemEditModal({ item, onClose, onSaved }) {
             Active
           </label>
         </div>
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 flex gap-2 justify-end">
-          <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white text-sm font-semibold rounded-lg">
+        <div className="sticky bottom-0 glass-overlay border-t border-white/40 p-4 flex gap-2 justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-white/60 rounded-lg text-sm">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary-luxury px-4 py-2 disabled:opacity-60 text-white text-sm font-semibold rounded-lg">
             {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
@@ -411,7 +411,7 @@ function Field({ label, value, onChange, type = 'text', step }) {
         step={step}
         value={value ?? ''}
         onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+        className="w-full px-3 py-2 bg-white/70 border border-white/80 rounded-lg text-sm focus:outline-none focus:border-pink-400"
       />
     </div>
   )
