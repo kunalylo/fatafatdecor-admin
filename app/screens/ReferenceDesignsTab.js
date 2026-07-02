@@ -285,9 +285,10 @@ function ReferenceCard({ reference: r, onClick }) {
           </div>
         )}
         <StatusBadge status={r.status} />
-        {/* Customer-total price chip — what the customer actually pays */}
+        {/* Customer-total price chip — always recomputed with the CURRENT pricing
+            formula (stored breakdowns may predate a pricing change) */}
         <div className="absolute top-2 right-2 px-2 py-1 bg-black/75 text-white text-xs font-bold rounded shadow">
-          Rs {(r.customer_breakdown?.total || customerBreakdown(r.base_price).total).toLocaleString()}
+          Rs {customerBreakdown(r.base_price || r.customer_breakdown?.decoration_total || 0).total.toLocaleString()}
         </div>
       </div>
       <div className="p-3 space-y-1">

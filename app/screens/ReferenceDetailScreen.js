@@ -502,12 +502,11 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
         <h3 className="font-display text-xl text-gray-900 mb-3">Customer View — What <span className="italic iridescent-text">Customer</span> Pays</h3>
         <div className="space-y-2 text-sm">
           <Row label="Decoration & Material (items at 2x)" value={`Rs ${breakdown.decoration_total.toLocaleString()}`} />
+          <Row label={`GST (${(breakdown.gst_rate * 100).toFixed(0)}% on decoration)`} value={`Rs ${breakdown.gst.toLocaleString()}`} muted />
+          <div className="border-t border-gray-200 my-2"></div>
           <Row label="Setup & Transportation" value={`Rs ${breakdown.setup_transport.toLocaleString()}`} sub />
           <Row label="Platform Fee" value={`Rs ${breakdown.platform_fee}`} sub />
           <Row label="Convenience Fee" value={`Rs ${breakdown.convenience_fee}`} sub />
-          <div className="border-t border-gray-200 my-2"></div>
-          <Row label="Subtotal" value={`Rs ${breakdown.subtotal.toLocaleString()}`} muted />
-          <Row label={`GST (${(breakdown.gst_rate * 100).toFixed(0)}%)`} value={`Rs ${breakdown.gst.toLocaleString()}`} muted />
           <div className="border-t border-gray-200 my-2"></div>
           <Row
             label={<strong>Customer Total</strong>}
