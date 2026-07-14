@@ -22,6 +22,7 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
   const [meta, setMeta] = useState({})
   const [items, setItems] = useState([])
   const [showSkuPicker, setShowSkuPicker] = useState(false)
+  const [creatingIdx, setCreatingIdx] = useState(null)
 
   const load = async () => {
     setLoading(true)
@@ -76,6 +77,17 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
     setRef(res)
     setEditingMeta(false)
     showToast('Saved', 'success')
+  }
+
+  // One-click: turn a weak/substituted match into a real SKU
+  // (created with proper name, description and AI image server-side).
+  const handleCreateSku = async (idx) => {
+    setCreatingIdx(idx)
+    const res = await api(`admin/references/${referenceId}/items/${idx}/create-sku`, { method: 'POST' })
+    setCreatingIdx(null)
+    if (res.error) { showToast(res.error, 'error'); return }
+    showToast(`Created ${res.sku.display_name || res.sku.sku_code} — image generating`, 'success')
+    load()
   }
 
   const handleSaveItems = async () => {
@@ -425,6 +437,17 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
                             <p className="text-[10px] text-gray-500 italic mt-0.5 max-w-md">
                               {it.description}{it.placement ? <span className="not-italic text-pink-500 font-semibold"> · {it.placement}</span> : ''}
                             </p>
+                          )}
+                          {!editingItems && it.raw && (it.confidence === 'low' || !it.matched_sku_code) && (
+                            <button
+                              onClick={() => handleCreateSku(idx)}
+                              disabled={creatingIdx !== null}
+                              title="The matched SKU is only the closest substitute — create this exact item as a new inventory SKU (with AI image)"
+                              className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                            >
+                              {creatingIdx === idx ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                              Create this exact item as new SKU
+                            </button>
                           )}
                         </div>
                       </div>
