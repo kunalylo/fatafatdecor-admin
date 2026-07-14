@@ -421,6 +421,11 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
                           ) : (
                             <p className="inline-flex items-center gap-0.5 text-[10px] text-red-500 font-semibold"><AlertTriangle className="w-2.5 h-2.5" /> UNMATCHED</p>
                           )}
+                          {(it.description || it.placement) && (
+                            <p className="text-[10px] text-gray-500 italic mt-0.5 max-w-md">
+                              {it.description}{it.placement ? <span className="not-italic text-pink-500 font-semibold"> · {it.placement}</span> : ''}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </td>
