@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Upload, Search, Edit2, X, Package, Plus, Bot, Zap } from 'lucide-react'
+import { Upload, Search, Edit2, X, Package, Plus, Bot, Zap, Image as ImageIcon, Wand2, Loader2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
 import CreateItemModal from './CreateItemModal'
@@ -22,7 +22,26 @@ export default function InventoryItemsTab() {
   const [showCreate, setShowCreate] = useState(false)
   const [autoOnly, setAutoOnly] = useState(false)
   const [usedOnly, setUsedOnly] = useState(false)
+  const [bulkImg, setBulkImg] = useState(null)   // null | { done, remaining }
   const fileInputRef = useRef(null)
+  const bulkStopRef = useRef(false)
+
+  // Loop the batch endpoint until every active item has an image.
+  const runBulkImages = async () => {
+    bulkStopRef.current = false
+    let done = 0
+    setBulkImg({ done: 0, remaining: '…' })
+    while (!bulkStopRef.current) {
+      const res = await api('admin/inventory/generate-missing-images', { method: 'POST', body: { limit: 10 } })
+      if (res.error) { showToast(res.error, 'error'); break }
+      done += res.generated || 0
+      setBulkImg({ done, remaining: res.remaining })
+      if (!res.remaining || (!res.generated && res.failed)) break   // finished, or batch fully failing
+    }
+    setBulkImg(null)
+    showToast(`Generated ${done} item image${done === 1 ? '' : 's'}`, 'success')
+    loadItems(); loadStats()
+  }
 
   const loadItems = async () => {
     setLoading(true)
@@ -105,6 +124,26 @@ export default function InventoryItemsTab() {
           <Plus className="w-4 h-4" />
           Add Item
         </button>
+
+        {bulkImg ? (
+          <button
+            onClick={() => { bulkStopRef.current = true }}
+            className="px-4 py-2 bg-purple-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
+            title="Click to stop after the current batch"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {bulkImg.done} done · {bulkImg.remaining} left — stop
+          </button>
+        ) : (
+          <button
+            onClick={runBulkImages}
+            className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-lg flex items-center gap-2"
+            title="AI-generate a product photo for every item that has none"
+          >
+            <Wand2 className="w-4 h-4" />
+            AI Images{stats?.missing_images ? ` (${stats.missing_images})` : ''}
+          </button>
+        )}
 
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -232,6 +271,7 @@ export default function InventoryItemsTab() {
             <table className="w-full text-sm">
               <thead className="bg-white/50 text-xs font-semibold text-gray-600 uppercase tracking-wide">
                 <tr>
+                  <th className="px-4 py-3 text-left w-14">Img</th>
                   <th className="px-4 py-3 text-left">SKU</th>
                   <th className="px-4 py-3 text-left">Category</th>
                   <th className="px-4 py-3 text-left">Color</th>
@@ -248,6 +288,21 @@ export default function InventoryItemsTab() {
                     item.auto_created ? 'bg-purple-50/40' :
                     item.used_in_references_count > 0 ? 'bg-green-50/30' : ''
                   }`}>
+                    <td className="px-4 py-3">
+                      <button onClick={() => setSelectedItem(item)} title={item.image_url ? 'View / change image' : 'No image yet — click to add'}>
+                        {item.image_url ? (
+                          <img
+                            src={`${item.image_url}?tr=w-80,h-80,c-maintain_ratio`}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover border border-gray-200 bg-white"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-gray-50 border border-dashed border-gray-300 flex items-center justify-center">
+                            <ImageIcon className="w-4 h-4 text-gray-300" />
+                          </div>
+                        )}
+                      </button>
+                    </td>
                     <td className="px-4 py-3 max-w-[280px]">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-mono text-xs text-gray-700 truncate">{item.sku_code}</span>
@@ -347,6 +402,37 @@ function ItemEditModal({ item, onClose, onSaved }) {
     active: item.active !== false,
   })
   const [saving, setSaving] = useState(false)
+  const [imageUrl, setImageUrl] = useState(item.image_url || '')
+  const [imgBusy, setImgBusy]   = useState(false)   // 'upload' | 'generate' | false
+  const imgFileRef = useRef(null)
+
+  const handleImageFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async () => {
+      setImgBusy('upload')
+      const res = await api(`admin/inventory/items/${item.sku_code}/image`, {
+        method: 'POST',
+        body: { image_base64: reader.result },
+      })
+      setImgBusy(false)
+      if (res.error) { showToast(res.error, 'error'); return }
+      setImageUrl(res.image_url)
+      showToast('Image uploaded', 'success')
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const handleGenerateImage = async () => {
+    setImgBusy('generate')
+    const res = await api(`admin/inventory/items/${item.sku_code}/generate-image`, { method: 'POST' })
+    setImgBusy(false)
+    if (res.error) { showToast(res.error, 'error'); return }
+    setImageUrl(res.image_url)
+    showToast('AI image generated', 'success')
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -373,6 +459,44 @@ function ItemEditModal({ item, onClose, onSaved }) {
           </button>
         </div>
         <div className="p-6 space-y-4">
+          {/* Item image — every SKU should have one */}
+          <div className="flex items-center gap-4">
+            {imageUrl ? (
+              <img
+                src={`${imageUrl}?tr=w-200,h-200,c-maintain_ratio`}
+                alt=""
+                className="w-24 h-24 rounded-xl object-cover border border-gray-200 bg-white"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-xl bg-gray-50 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1">
+                <ImageIcon className="w-6 h-6 text-gray-300" />
+                <span className="text-[9px] text-gray-400 font-semibold uppercase">No image</span>
+              </div>
+            )}
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => imgFileRef.current?.click()}
+                  disabled={!!imgBusy}
+                  className="px-3 py-1.5 bg-white border border-gray-300 hover:border-pink-400 text-gray-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 disabled:opacity-60"
+                >
+                  {imgBusy === 'upload' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                  Upload photo
+                </button>
+                <button
+                  onClick={handleGenerateImage}
+                  disabled={!!imgBusy}
+                  className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 disabled:opacity-60"
+                >
+                  {imgBusy === 'generate' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                  AI generate
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-400">Saved instantly — shown in item lists and reference detected-items.</p>
+              <input ref={imgFileRef} type="file" accept="image/*" onChange={handleImageFile} className="hidden" />
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <Field label="Color" value={form.color} onChange={v => setForm(f => ({ ...f, color: v }))} />
             <Field label="Finish" value={form.finish} onChange={v => setForm(f => ({ ...f, finish: v }))} />

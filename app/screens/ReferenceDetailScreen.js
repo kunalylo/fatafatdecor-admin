@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowLeft, CheckCircle, XCircle, RefreshCw, Loader2, Trash2,
-  Edit2, Save, AlertTriangle, Eye, EyeOff, Plus, Bot, Zap, ArrowUp, Check
+  Edit2, Save, AlertTriangle, Eye, EyeOff, Plus, Bot, Zap, ArrowUp, Check,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { api } from '../lib/constants'
@@ -392,21 +393,36 @@ export default function ReferenceDetailScreen({ referenceId, onBack }) {
                     it.confidence === 'auto_created' ? 'bg-purple-50/30' : ''
                   }`}>
                     <td className="py-2 pr-2">
-                      <p className="font-medium text-gray-900 text-sm flex items-center gap-2 flex-wrap">
-                        <span>{it.sku_name || it.raw_detection}</span>
-                        {it.confidence === 'manual' ? (
-                          <span className="text-[9px] uppercase font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">+ Manual</span>
-                        ) : it.confidence === 'auto_created' ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200"><Zap className="w-2.5 h-2.5" /> Auto-SKU</span>
+                      <div className="flex items-center gap-2.5">
+                        {it.item_image_url ? (
+                          <img
+                            src={`${it.item_image_url}?tr=w-80,h-80,c-maintain_ratio`}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover border border-gray-200 bg-white shrink-0"
+                          />
                         ) : (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] uppercase font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200"><Bot className="w-2.5 h-2.5" /> AI</span>
+                          <div className="w-10 h-10 rounded-lg bg-gray-50 border border-dashed border-gray-300 flex items-center justify-center shrink-0" title="No item image yet — add one in Inventory → All Items">
+                            <ImageIcon className="w-4 h-4 text-gray-300" />
+                          </div>
                         )}
-                      </p>
-                      {it.matched_sku_code ? (
-                        <p className="text-[10px] text-gray-500 font-mono">{it.matched_sku_code}</p>
-                      ) : (
-                        <p className="inline-flex items-center gap-0.5 text-[10px] text-red-500 font-semibold"><AlertTriangle className="w-2.5 h-2.5" /> UNMATCHED</p>
-                      )}
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm flex items-center gap-2 flex-wrap">
+                            <span>{it.sku_name || it.raw_detection}</span>
+                            {it.confidence === 'manual' ? (
+                              <span className="text-[9px] uppercase font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">+ Manual</span>
+                            ) : it.confidence === 'auto_created' ? (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] uppercase font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200"><Zap className="w-2.5 h-2.5" /> Auto-SKU</span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] uppercase font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200"><Bot className="w-2.5 h-2.5" /> AI</span>
+                            )}
+                          </p>
+                          {it.matched_sku_code ? (
+                            <p className="text-[10px] text-gray-500 font-mono">{it.matched_sku_code}</p>
+                          ) : (
+                            <p className="inline-flex items-center gap-0.5 text-[10px] text-red-500 font-semibold"><AlertTriangle className="w-2.5 h-2.5" /> UNMATCHED</p>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="text-center px-2">
                       {editingItems ? (
