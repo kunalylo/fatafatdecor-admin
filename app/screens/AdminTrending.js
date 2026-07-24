@@ -1,10 +1,12 @@
 'use client'
 
-// Trending Decorations — the "Near you / Trending Decorations" rail shown on
-// the app + website Home. Images/titles are fully admin-editable here via the
-// shared CatalogSection over admin/catalog/trending.
+// Home content editors — the two "Trending" rows on the app + website Home:
+//   • Trending Decorations — the "Near you" cards
+//   • Trending Hampers      — the seasonal hamper carousel
+// Both are fully admin-editable via the shared CatalogSection over
+// admin/catalog/:collection.
 import { CatalogSection } from '../components/CatalogKit'
-import { TrendingUp, ImageIcon } from 'lucide-react'
+import { TrendingUp, Gift, ImageIcon } from 'lucide-react'
 
 const thumb = (src) => (
   <div className="w-full h-28 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 mb-3 flex items-center justify-center">
@@ -14,24 +16,27 @@ const thumb = (src) => (
   </div>
 )
 
+const inr = (n) => `₹${(Number(n) || 0).toLocaleString('en-IN')}`
+
 export default function AdminTrending() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
+      {/* ── Trending Decorations rail ── */}
       <CatalogSection
         collection="trending"
         title="Trending Decorations"
-        subtitle="The 'Near you' rail on the app & website Home. Drag order via Sort order."
+        subtitle="The 'Near you' rail on the app & website Home."
         icon={TrendingUp}
         addLabel="Add Trending Card"
         uploadFolder="/content/trending"
         fields={[
-          { key: 'image',    label: 'Image', type: 'image', required: true },
-          { key: 'title',    label: 'Title', type: 'text', required: true, placeholder: 'Elegant Birthday Celebration' },
-          { key: 'category', label: 'Category label', type: 'text', placeholder: 'Birthday Decor' },
-          { key: 'location', label: 'Location', type: 'text', placeholder: 'Ranchi, Jharkhand' },
-          { key: 'occasion', label: 'Opens which occasion on tap', type: 'text', placeholder: 'birthday · anniversary · baby_shower · housewarming · festival' },
-          { key: 'booked',   label: 'Booked recently (count)', type: 'number', default: 0 },
-          { key: 'accent',   label: 'Accent colour', type: 'accent' },
+          { key: 'image',     label: 'Image', type: 'image', required: true },
+          { key: 'title',     label: 'Title', type: 'text', required: true, placeholder: 'Elegant Birthday Celebration' },
+          { key: 'category',  label: 'Category label', type: 'text', placeholder: 'Birthday Decor' },
+          { key: 'location',  label: 'Location', type: 'text', placeholder: 'Ranchi, Jharkhand' },
+          { key: 'occasion',  label: 'Opens which occasion on tap', type: 'text', placeholder: 'birthday · anniversary · baby_shower · housewarming · festival' },
+          { key: 'booked',    label: 'Booked recently (count)', type: 'number', default: 0 },
+          { key: 'accent',    label: 'Accent colour', type: 'accent' },
           { key: 'sortOrder', label: 'Sort order', type: 'number', default: 0 },
         ]}
         card={(d) => (
@@ -40,6 +45,37 @@ export default function AdminTrending() {
             <p className="text-[10px] font-bold tracking-wide uppercase text-pink-500">{d.category || '—'}</p>
             <h4 className="font-bold text-gray-800 text-sm truncate">{d.title}</h4>
             <p className="text-[11px] text-gray-400 mt-0.5">{d.booked || 0} booked recently</p>
+          </>
+        )}
+      />
+
+      {/* ── Trending Hampers carousel ── */}
+      <CatalogSection
+        collection="trending_hampers"
+        title="Trending Hampers"
+        subtitle="The seasonal hamper carousel on Home. Set an optional Festival ID to open that festival page on tap."
+        icon={Gift}
+        addLabel="Add Hamper Card"
+        uploadFolder="/content/trending_hampers"
+        fields={[
+          { key: 'image',      label: 'Image', type: 'image', required: true },
+          { key: 'eyebrow',    label: 'Collection label', type: 'text', placeholder: 'Bandhan Collection' },
+          { key: 'title',      label: 'Title', type: 'text', required: true, placeholder: 'Rakhi' },
+          { key: 'tagline',    label: 'Tagline', type: 'text', placeholder: 'For your sibling' },
+          { key: 'priceFrom',  label: 'Hampers starting from (₹)', type: 'number', default: 0 },
+          { key: 'festivalId', label: 'Opens festival on tap (optional)', type: 'text', placeholder: 'rakhi · diwali · christmas · holi — leave blank to open Gifts' },
+          { key: 'color',      label: 'Arrow button colour (hex)', type: 'text', placeholder: '#B89AFF' },
+          { key: 'sortOrder',  label: 'Sort order', type: 'number', default: 0 },
+        ]}
+        card={(d) => (
+          <>
+            {thumb(d.image)}
+            <p className="text-[10px] font-bold tracking-wide uppercase text-pink-500">{d.eyebrow || '—'}</p>
+            <h4 className="font-bold text-gray-800 text-sm truncate">{d.title}</h4>
+            <p className="text-[11px] text-gray-400 mt-0.5">
+              {d.priceFrom > 0 ? `Hampers from ${inr(d.priceFrom)}` : 'No price set'}
+              {d.festivalId ? ` · → ${d.festivalId}` : ''}
+            </p>
           </>
         )}
       />
