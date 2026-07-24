@@ -137,8 +137,8 @@ export default function AdminFestivals() {
             <Flame className="w-5 h-5 text-pink-500" />
           </div>
           <div>
-            <h3 className="font-display text-xl text-gray-900 leading-tight">Festivals</h3>
-            <p className="text-xs text-gray-400">Landing pages + home carousel · {docs.length} total</p>
+            <h3 className="font-display text-xl text-gray-900 leading-tight">Trending Hampers</h3>
+            <p className="text-xs text-gray-400">The Home hampers carousel (star = show on Home) + each collection&apos;s landing page · {docs.length} total</p>
           </div>
         </div>
         <Button onClick={openCreate} className="btn-primary-luxury text-white border-0 rounded-xl h-9 px-3 flex items-center gap-1.5 text-sm">
