@@ -18,6 +18,7 @@ const PERMISSION_OPTIONS = [
   { id: 'slots',     label: 'Slots',      desc: 'Manage delivery slots' },
   { id: 'users',     label: 'Customers',  desc: 'View and edit customers' },
   { id: 'gifts',     label: 'Gifts',      desc: 'Manage gift catalog and gift orders' },
+  { id: 'trending',  label: 'Trending',   desc: 'Manage the Trending Decorations rail on Home' },
   { id: 'festivals', label: 'Festivals',  desc: 'Manage festival collections and hampers' },
   { id: 'bulkcorp',  label: 'Bulk & Corp',desc: 'Manage bulk tiers, hampers and corporate packages' },
   { id: 'private',   label: 'Private',    desc: 'Manage Velvet collection and invite codes' },

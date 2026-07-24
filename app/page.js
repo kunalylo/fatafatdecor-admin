@@ -12,13 +12,14 @@ import AdminCities from './screens/AdminCities'
 import AdminGifts from './screens/AdminGifts'
 import InventoryScreen from './screens/InventoryScreen'
 import AdminFestivals from './screens/AdminFestivals'
+import AdminTrending from './screens/AdminTrending'
 import AdminBulkCorp from './screens/AdminBulkCorp'
 import AdminPrivate from './screens/AdminPrivate'
 import AdminLeads from './screens/AdminLeads'
 import {
   LayoutDashboard, Sparkles, Package, Box, Users, Clock, Gift,
   ShoppingBag, LogOut, Menu, X, ChevronRight, UserCog, UserCheck, Shield, MapPin,
-  Image as ImageIcon, Flame, Boxes, Lock, Inbox
+  Image as ImageIcon, Flame, Boxes, Lock, Inbox, TrendingUp
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -59,6 +60,7 @@ const ALL_NAV_ITEMS = [
   { id: 'slots',       label: 'Slots',        icon: Clock,          adminOnly: false },
   { id: 'users',       label: 'Customers',    icon: UserCheck,      adminOnly: false },
   { id: 'gifts',       label: 'Gifts',        icon: Gift,           adminOnly: false },
+  { id: 'trending',    label: 'Trending',     icon: TrendingUp,     adminOnly: false },
   { id: 'festivals',   label: 'Festivals',    icon: Flame,          adminOnly: false },
   { id: 'bulkcorp',    label: 'Bulk & Corp',  icon: Boxes,          adminOnly: false },
   { id: 'private',     label: 'Private',      icon: Lock,           adminOnly: false },
@@ -264,11 +266,12 @@ function AdminPanel() {
           {adminTab === 'cities'     && <AdminCities />}
           {adminTab === 'gifts'      && <AdminGifts />}
           {adminTab === 'inventory'  && <InventoryScreen />}
+          {adminTab === 'trending'   && <AdminTrending />}
           {adminTab === 'festivals'  && <AdminFestivals />}
           {adminTab === 'bulkcorp'   && <AdminBulkCorp />}
           {adminTab === 'private'    && <AdminPrivate />}
           {adminTab === 'leads'      && <AdminLeads />}
-          {!['dashboard', 'orders', 'sub-admins', 'users', 'cities', 'gifts', 'inventory', 'festivals', 'bulkcorp', 'private', 'leads'].includes(adminTab) && <AdminScreen />}
+          {!['dashboard', 'orders', 'sub-admins', 'users', 'cities', 'gifts', 'inventory', 'trending', 'festivals', 'bulkcorp', 'private', 'leads'].includes(adminTab) && <AdminScreen />}
         </main>
       </div>
     </div>
