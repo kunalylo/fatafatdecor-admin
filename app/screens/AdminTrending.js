@@ -28,6 +28,7 @@ export default function AdminTrending() {
           { key: 'image',    label: 'Image', type: 'image', required: true },
           { key: 'title',    label: 'Title', type: 'text', required: true, placeholder: 'Elegant Birthday Celebration' },
           { key: 'category', label: 'Category label', type: 'text', placeholder: 'Birthday Decor' },
+          { key: 'location', label: 'Location', type: 'text', placeholder: 'Ranchi, Jharkhand' },
           { key: 'occasion', label: 'Opens which occasion on tap', type: 'text', placeholder: 'birthday · anniversary · baby_shower · housewarming · festival' },
           { key: 'booked',   label: 'Booked recently (count)', type: 'number', default: 0 },
           { key: 'accent',   label: 'Accent colour', type: 'accent' },
