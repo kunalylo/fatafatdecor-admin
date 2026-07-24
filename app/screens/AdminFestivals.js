@@ -160,7 +160,6 @@ export default function AdminFestivals() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {docs.map(f => {
             const active = isActiveDoc(f)
-            const days = daysToGo(f.month, f.day)
             return (
               <div key={f.id} className={`bg-white rounded-2xl border-2 border-gray-100 shadow-sm overflow-hidden transition-all ${active ? '' : 'opacity-60'}`}>
                 <div className="relative h-28 bg-gray-100">
@@ -172,9 +171,6 @@ export default function AdminFestivals() {
                       <Star className="w-3 h-3 fill-current" /> FEATURED
                     </span>
                   )}
-                  <span className="absolute bottom-2 right-2 bg-black/55 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                    {days === 0 ? 'Today' : `${days} days away`}
-                  </span>
                 </div>
                 <div className="p-4">
                   {f.eyebrow && <p className="text-[10px] uppercase tracking-wide text-pink-400 font-bold mb-0.5">{f.eyebrow}</p>}
